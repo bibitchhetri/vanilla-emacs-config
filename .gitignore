@@ -1,0 +1,15 @@
+# Ignore auto-save and backup files
+auto-save-list/
+backups/
+*.el~
+*~
+
+# Ignore native compilation cache
+eln-cache/
+
+# Ignore straight.el build artifacts
+straight/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
