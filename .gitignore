@@ -13,3 +13,6 @@ straight/
 # Ignore system files
 .DS_Store
 Thumbs.db
+
+.local/
+recentf
