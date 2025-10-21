@@ -1,22 +1,20 @@
 (defvar bootstrap-version)
-  (let ((bootstrap-file
-         (expand-file-name
-          "straight/repos/straight.el/bootstrap.el"
-          (or (bound-and-true-p straight-base-dir)
-              user-emacs-directory)))
-        (bootstrap-version 7))
-    (unless (file-exists-p bootstrap-file)
-      (with-current-buffer
-          (url-retrieve-synchronously
-           "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-           'silent 'inhibit-cookies)
-        (goto-char (point-max))
-        (eval-print-last-sexp)))
-    (load bootstrap-file nil 'nomessage))
-;; Ensure use-package is installed via straight.el
-(straight-use-package 'use-package)
+(let ((bootstrap-file
+       (expand-file-name
+        "straight/repos/straight.el/bootstrap.el"
+        (or (bound-and-true-p straight-base-dir)
+            user-emacs-directory)))
+      (bootstrap-version 7))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
 
-;; Make use-package use straight.el by default
+(straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
 
 (setq evil-want-keybinding nil
@@ -69,7 +67,6 @@
  "w s" '(split-window-below :which-key "Split horizontal")
  "w c" '(delete-window :which-key "Delete window")
  "w o" '(delete-other-windows :which-key "Maximize window")
- ;; Window navigation
  "w j" '(evil-window-down :which-key "Move to window below")
  "w k" '(evil-window-up :which-key "Move to window above")
  "w h" '(evil-window-left :which-key "Move to window left")
@@ -94,7 +91,9 @@
  "h" '(:ignore t :which-key "Help")
  "h f" '(counsel-describe-function :which-key "Describe function")
  "h v" '(counsel-describe-variable :which-key "Describe variable")
- "h r r" (lambda () (interactive) (load-file "~/.emacs.d/init.el")) :which-key "Reload emacs config"
+ "h r r" '((lambda () (interactive)
+             (load-file "~/.emacs.d/init.el"))
+            :which-key "Reload emacs config")
 
  ;; Toggle
  "t" '(:ignore t :which-key "Toggle")
@@ -108,8 +107,6 @@
 
 (add-hook 'emacs-startup-hook
           (lambda ()
-            (evil-mode 1)
-            (evil-collection-init)
             (which-key-mode 1)
             (global-visual-line-mode 1)
             (global-display-line-numbers-mode 1)
@@ -118,11 +115,21 @@
             (column-number-mode 1)
             (display-time-mode 1)))
 
-(when (member "JetBrains Mono" (font-family-list))
+;; Use system fonts that are guaranteed to be available on macOS
+(when (display-graphic-p)
+  (when (member "SF Mono" (font-family-list))
+    (set-face-attribute 'default nil :font "SF Mono" :height 110 :weight 'medium)
+    (add-to-list 'default-frame-alist '(font . "SF Mono-11")))
+  
+  (when (member "Helvetica" (font-family-list))
+    (set-face-attribute 'variable-pitch nil :font "Helvetica" :height 120 :weight 'medium)))
+
+;; Use JetBrains Mono if available (when display is available)
+(when (and (display-graphic-p) (member "JetBrains Mono" (font-family-list)))
   (set-face-attribute 'default nil :font "JetBrains Mono" :height 110 :weight 'medium)
   (add-to-list 'default-frame-alist '(font . "JetBrains Mono-11")))
 
-(when (member "Ubuntu" (font-family-list))
+(when (and (display-graphic-p) (member "Ubuntu" (font-family-list)))
   (set-face-attribute 'variable-pitch nil :font "Ubuntu" :height 120 :weight 'medium)
   (set-face-attribute 'fixed-pitch nil :font "JetBrains Mono" :height 110 :weight 'medium))
 
@@ -139,19 +146,14 @@
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 
-;; macOS window styling
 (when (eq system-type 'darwin)
-  ;; Remove window decorations and add rounded corners
   (add-to-list 'default-frame-alist '(undecorated-round . t))
-  ;; Apply rounded corners to existing frame
   (set-frame-parameter (selected-frame) 'undecorated-round t))
 
-(global-display-line-numbers-mode 1)
-(global-visual-line-mode 1)
-(setq display-line-numbers-type 'relative)
+;; Line numbering is configured in Startup Services section
 
-(setq backup-directory-alist `(("." . "~/.emacs.d/backups")))
-(setq version-control t
+(setq backup-directory-alist `(("." . "~/.emacs.d/backups"))
+      version-control t
       kept-new-versions 5
       kept-old-versions 2
       delete-old-versions t)
@@ -172,11 +174,10 @@
 (require 'org-tempo)
 
 (use-package sudo-edit
-:config
+  :config
   (my/leader-keys
-    ;; file with privilege i.e f p
-    "f p" '(sudo-edit-find-file :wk "Sudo find file")
-    "f P" '(sudo-edit :wk "Sudo edit file")))
+    "f p" '(sudo-edit-find-file :which-key "Sudo find file")
+    "f P" '(sudo-edit :which-key "Sudo edit file")))
 
 (straight-use-package 'which-key)
 (require 'which-key)
@@ -186,38 +187,31 @@
       which-key-sort-order #'which-key-key-order-alpha
       which-key-sort-uppercase-first nil
       which-key-add-column-padding 1
-      which-key-max-display-columns nil
       which-key-min-display-lines 6
-      which-key-side-window-slot 0
-      which-key-side-window-max-height 0.25
       which-key-idle-delay 0.8
-      which-key-max-description-length 25
-      which-key-allow-imprecise-window-fit nil
       which-key-separator "   ")
 
 (straight-use-package 'ivy)
 (straight-use-package 'counsel)
 (straight-use-package 'ivy-rich)
+(straight-use-package 'swiper)
+(straight-use-package 'all-the-icons-ivy-rich)
 
-;; Ivy configuration
-(setq ivy-use-virtual-buffers t)
-(setq ivy-count-format "(%d/%d) ")
-(setq enable-recursive-minibuffers t)
+(setq ivy-use-virtual-buffers t
+      ivy-count-format "(%d/%d) "
+      enable-recursive-minibuffers t)
 
-;; Enable Ivy mode
 (ivy-mode 1)
-
-;; Counsel configuration
 (counsel-mode 1)
-
-;; Ivy-rich configuration
 (ivy-rich-mode 1)
 
-;; Optional: all-the-icons-ivy-rich (if available)
-(when (require 'all-the-icons-ivy-rich nil t)
-  (all-the-icons-ivy-rich-mode 1))
+;; Enable all-the-icons-ivy-rich for better visual experience
+;; Use a hook to ensure it loads after all-the-icons
+(add-hook 'after-init-hook
+          (lambda ()
+            (when (require 'all-the-icons-ivy-rich nil t)
+              (all-the-icons-ivy-rich-mode 1))))
 
-;; Ivy-rich customizations
 (setq ivy-virtual-abbreviate 'full
       ivy-rich-switch-buffer-align-virtual-buffer t
       ivy-rich-path-style 'abbrev)
@@ -225,11 +219,10 @@
 (ivy-set-display-transformer 'ivy-switch-buffer
                              'ivy-rich-switch-buffer-transformer)
 
-;; Additional Ivy keybindings
 (global-set-key (kbd "C-c C-r") 'ivy-resume)
 (global-set-key (kbd "C-x B") 'ivy-switch-buffer-other-window)
-(global-set-key (kbd "C-s") 'counsel-grep-or-swiper)
-(global-set-key (kbd "C-r") 'counsel-grep-or-swiper-backward)
+(global-set-key (kbd "C-S-s") 'swiper)
+(global-set-key (kbd "C-S-r") 'swiper-backward)
 (global-set-key (kbd "M-x") 'counsel-M-x)
 (global-set-key (kbd "C-x C-f") 'counsel-find-file)
 (global-set-key (kbd "C-x b") 'ivy-switch-buffer)
@@ -237,26 +230,17 @@
 (global-set-key (kbd "C-h v") 'counsel-describe-variable)
 
 (straight-use-package 'all-the-icons)
-
 (straight-use-package 'all-the-icons-dired)
 
-;; Enable all-the-icons-dired in dired mode
-(add-hook 'dired-mode-hook 'all-the-icons-dired-mode)
+(with-eval-after-load 'dired
+  (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
 
-;; Set transparency and blur for new frames (GUI mode only)
 (when (display-graphic-p)
-  ;; Transparency settings
-  (add-to-list 'default-frame-alist '(alpha . (90 . 90)))
-  ;; Apply transparency to existing frame
-  (set-frame-parameter (selected-frame) 'alpha '(90 . 90))
-  
-  ;; Blur effect for macOS
+  (add-to-list 'default-frame-alist '(alpha . (100 . 100)))
+  (set-frame-parameter (selected-frame) 'alpha '(100 . 100))
+
   (when (eq system-type 'darwin)
     (add-to-list 'default-frame-alist '(ns-appearance . dark))
-    (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-    ;; Enable blur effect
-    (add-to-list 'default-frame-alist '(ns-background-blur . t))
-    ;; Apply blur to existing frame
-    (set-frame-parameter (selected-frame) 'ns-background-blur t)))
+    (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))))
 
 (load-theme 'tango-dark t)
