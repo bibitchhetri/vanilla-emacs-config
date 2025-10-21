@@ -66,9 +66,15 @@
  ;; Window
  "w"  '(:ignore t :which-key "window")
  "w v" '(split-window-right :which-key "Split vertical")
- "w h" '(split-window-below :which-key "Split horizontal")
+ "w s" '(split-window-below :which-key "Split horizontal")
  "w c" '(delete-window :which-key "Delete window")
  "w o" '(delete-other-windows :which-key "Maximize window")
+ ;; Window navigation
+ "w j" '(evil-window-down :which-key "Move to window below")
+ "w k" '(evil-window-up :which-key "Move to window above")
+ "w h" '(evil-window-left :which-key "Move to window left")
+ "w l" '(evil-window-right :which-key "Move to window right")
+ "w w" '(other-window :which-key "Switch to other window")
 
  ;; Search
  "s" '(:ignore t :which-key "search")
@@ -219,7 +225,7 @@
 (ivy-set-display-transformer 'ivy-switch-buffer
                              'ivy-rich-switch-buffer-transformer)
 
-;; Additional Ivy keybindings (Doom Emacs style)
+;; Additional Ivy keybindings
 (global-set-key (kbd "C-c C-r") 'ivy-resume)
 (global-set-key (kbd "C-x B") 'ivy-switch-buffer-other-window)
 (global-set-key (kbd "C-s") 'counsel-grep-or-swiper)
@@ -229,6 +235,13 @@
 (global-set-key (kbd "C-x b") 'ivy-switch-buffer)
 (global-set-key (kbd "C-h f") 'counsel-describe-function)
 (global-set-key (kbd "C-h v") 'counsel-describe-variable)
+
+(straight-use-package 'all-the-icons)
+
+(straight-use-package 'all-the-icons-dired)
+
+;; Enable all-the-icons-dired in dired mode
+(add-hook 'dired-mode-hook 'all-the-icons-dired-mode)
 
 ;; Set transparency and blur for new frames (GUI mode only)
 (when (display-graphic-p)

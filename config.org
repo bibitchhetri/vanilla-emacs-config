@@ -26,6 +26,7 @@
 - [[#sudo-edit][SUDO Edit]]
 - [[#which-key][Which-Key]]
 - [[#ivy-counsel][IVY (COUNSEL)]]
+- [[#all-the-icons][ALL THE ICONS]]
 - [[#transparency][Transparency]]
 - [[#theme-minimal-dark][Theme (Minimal Dark)]]
 
@@ -107,9 +108,15 @@
  ;; Window
  "w"  '(:ignore t :which-key "window")
  "w v" '(split-window-right :which-key "Split vertical")
- "w h" '(split-window-below :which-key "Split horizontal")
+ "w s" '(split-window-below :which-key "Split horizontal")
  "w c" '(delete-window :which-key "Delete window")
  "w o" '(delete-other-windows :which-key "Maximize window")
+ ;; Window navigation
+ "w j" '(evil-window-down :which-key "Move to window below")
+ "w k" '(evil-window-up :which-key "Move to window above")
+ "w h" '(evil-window-left :which-key "Move to window left")
+ "w l" '(evil-window-right :which-key "Move to window right")
+ "w w" '(other-window :which-key "Switch to other window")
 
  ;; Search
  "s" '(:ignore t :which-key "search")
@@ -322,6 +329,17 @@
 (global-set-key (kbd "C-h v") 'counsel-describe-variable)
 #+END_SRC
 
+* ALL THE ICONS
+Icon set that can be used with dashboard, dired, ibuffer and other Emacs programs.
+
+#+BEGIN_SRC emacs-lisp
+(straight-use-package 'all-the-icons)
+
+(straight-use-package 'all-the-icons-dired)
+
+;; Enable all-the-icons-dired in dired mode
+(add-hook 'dired-mode-hook 'all-the-icons-dired-mode)
+#+END_SRC
 
 * Transparency
 #+begin_src emacs-lisp
