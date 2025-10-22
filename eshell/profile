@@ -9,6 +9,6 @@
 
 # Welcome message
 echo "Welcome to Eshell!"
-echo "Use 'clear' to clear the buffer"
-echo "Use C-c C-p/C-c C-n to navigate between prompts"
-echo "Use C-c C-l to clear screen"
+# echo "Use 'clear' to clear the buffer"
+# echo "Use C-c C-p/C-c C-n to navigate between prompts"
+# echo "Use C-c C-l to clear screen"

@@ -20,12 +20,14 @@
   - [[#menubar-toolbar--scrollbar][Menubar, Toolbar & Scrollbar]]
   - [[#line-numbering][Line Numbering]]
 - [[#buffer-move][Buffer-Move]]
+- [[#window-focus-enhancement][Window Focus Enhancement]]
 - [[#backup-strategy][Backup Strategy]]
 - [[#org-mode-enhancements][Org Mode Enhancements]]
   - [[#enable-toc--org-bullets][Enable TOC & Org Bullets]]
   - [[#org-tempo][Org Tempo]]
 - [[#sudo-edit][SUDO Edit]]
 - [[#shells--terminal][Shells & Terminal]]
+  - [[#eshell][Eshell]]
   - [[#vterm][Vterm]]
   - [[#vterm-toggle][Vterm-Toggle]]
 - [[#which-key][Which-Key]]
@@ -228,6 +230,29 @@
   (straight-use-package 'buffer-move)
   (require 'buffer-move)
 #+end_src
+
+* Window Focus Enhancement
+#+BEGIN_SRC emacs-lisp
+;; Automatically move focus to newly created split windows
+(defun my/select-new-window (original-function &rest args)
+  "Advice function to select the newly created window after splitting."
+  (let ((original-window (selected-window)))
+    (apply original-function args)
+    (let ((new-window (next-window original-window)))
+      (when (and new-window (not (eq new-window original-window)))
+        (select-window new-window)))))
+
+;; Apply the advice to window splitting functions
+(advice-add 'split-window-right :around 'my/select-new-window)
+(advice-add 'split-window-below :around 'my/select-new-window)
+(advice-add 'evil-window-new :around 'my/select-new-window)
+
+;; Also handle evil's split commands if they exist
+(when (fboundp 'evil-window-split)
+  (advice-add 'evil-window-split :around 'my/select-new-window))
+(when (fboundp 'evil-window-vsplit)
+  (advice-add 'evil-window-vsplit :around 'my/select-new-window))
+#+END_SRC
 * Backup Strategy
 #+BEGIN_SRC emacs-lisp
 (setq backup-directory-alist `(("." . "~/.emacs.d/backups"))

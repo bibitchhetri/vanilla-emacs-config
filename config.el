@@ -163,6 +163,26 @@
 (straight-use-package 'buffer-move)
 (require 'buffer-move)
 
+;; Automatically move focus to newly created split windows
+(defun my/select-new-window (original-function &rest args)
+  "Advice function to select the newly created window after splitting."
+  (let ((original-window (selected-window)))
+    (apply original-function args)
+    (let ((new-window (next-window original-window)))
+      (when (and new-window (not (eq new-window original-window)))
+        (select-window new-window)))))
+
+;; Apply the advice to window splitting functions
+(advice-add 'split-window-right :around 'my/select-new-window)
+(advice-add 'split-window-below :around 'my/select-new-window)
+(advice-add 'evil-window-new :around 'my/select-new-window)
+
+;; Also handle evil's split commands if they exist
+(when (fboundp 'evil-window-split)
+  (advice-add 'evil-window-split :around 'my/select-new-window))
+(when (fboundp 'evil-window-vsplit)
+  (advice-add 'evil-window-vsplit :around 'my/select-new-window))
+
 (setq backup-directory-alist `(("." . "~/.emacs.d/backups"))
       version-control t
       kept-new-versions 5
