@@ -1,1 +1,1 @@
-### Welcome to the Church
+### Welcome to the Church!
