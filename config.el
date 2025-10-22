@@ -487,6 +487,117 @@
 (setq which-key-idle-delay 0.3)
 (which-key-mode)
 
+(straight-use-package 'dashboard)
+(straight-use-package 'page-break-lines)
+(straight-use-package 'projectile)
+
+;; Ensure all-the-icons is loaded first
+(require 'all-the-icons)
+
+;; Configure projectile for projects
+(require 'projectile)
+(projectile-mode +1)
+(setq projectile-project-search-path '("~/workspaces/" "~/projects/" "~/code/" "~/"))
+(setq dashboard-projects-backend 'projectile)
+
+;; Dashboard configuration
+(setq dashboard-banner-logo-title "BKC's Emacs Dashboard"
+      dashboard-startup-banner (expand-file-name "img/logo.png" user-emacs-directory)  ; Use custom logo
+      dashboard-center-content t      ; Center content horizontally
+      dashboard-vertically-center-content t ; Vertically center content
+      dashboard-navigation-cycle t ; Enable cycle navigation between each section
+      dashboard-show-shortcuts nil    ; Disable shortcut indicators
+      dashboard-icon-type 'all-the-icons  ; Use all-the-icons
+      dashboard-set-heading-icons t  ; Add icons to headings
+      dashboard-set-file-icons t     ; Add icons to files
+      dashboard-items '((recents   . 5)
+                        (bookmarks . 5)
+                        (projects  . 5))
+      ;; Enable navigator
+      dashboard-set-navigator t)
+
+;; Enable dashboard at startup
+(dashboard-setup-startup-hook)
+
+;; Use custom footer with your name
+(setq dashboard-set-footer t
+      dashboard-footer-messages '("Powered by Bibit Kunwar Chhetri"))
+
+;; Create custom function to add separators around dashboard items
+(defun dashboard-insert-items-with-separators ()
+  "Insert dashboard items with separators around each section."
+  ;; Insert separator at the top - ensure full width
+  (let ((width (frame-width)))
+    (insert (propertize (make-string width ?─) 'face 'shadow))
+    (dashboard-insert-newline))
+  
+  ;; Use the default dashboard items insertion (which handles headings with icons)
+  (dashboard-insert-items)
+  
+  ;; Insert separator at the bottom - ensure full width
+  (dashboard-insert-newline)
+  (let ((width (frame-width)))
+    (insert (propertize (make-string width ?─) 'face 'shadow))))
+
+;; Ensure navigator is included in dashboard layout with separators
+(setq dashboard-startupify-list '(dashboard-insert-banner
+                                   dashboard-insert-newline
+                                   dashboard-insert-banner-title
+                                   dashboard-insert-newline
+                                   dashboard-insert-navigator
+                                   dashboard-insert-newline
+                                   dashboard-insert-init-info
+                                   dashboard-insert-newline
+                                   dashboard-insert-newline
+                                   dashboard-insert-items-with-separators
+                                   dashboard-insert-newline
+                                   dashboard-insert-newline
+                                   dashboard-insert-footer))
+
+;; Configure for emacs daemon
+(setq initial-buffer-choice (lambda () (get-buffer-create dashboard-buffer-name)))
+
+;; Configure navigator buttons (horizontal layout)
+(setq dashboard-navigator-buttons
+      `(;; Single horizontal line
+        ((,(when (fboundp 'all-the-icons-octicon)
+             (all-the-icons-octicon "mark-github" :height 1.1 :v-adjust 0.0))
+          "Homepage"
+          "Browse homepage"
+          (lambda (&rest _) (browse-url "https://github.com/bibitchhetri")))
+         ("★" "Blog" "Show stars" (lambda (&rest _) (browse-url "https://bibitkunwar.com.np")) warning)
+         ("?" "" "?/h" #'show-help nil "<" ">")
+         (,(when (fboundp 'all-the-icons-faicon)
+             (all-the-icons-faicon "refresh" :height 1.1 :v-adjust 0.0))
+          "Refresh"
+          "Refresh dashboard"
+          (lambda (&rest _) (dashboard-refresh-buffer)))
+         ("🔄" "Restart" "Restart Emacs" (lambda (&rest _) (restart-emacs)) error))))
+
+;; Ensure custom logo is loaded
+(with-eval-after-load 'dashboard
+  (when (file-exists-p (expand-file-name "img/logo.png" user-emacs-directory))
+    (setq dashboard-startup-banner (expand-file-name "img/logo.png" user-emacs-directory))))
+
+;; Enable page-break-lines globally for better separators
+(global-page-break-lines-mode)
+
+;; Add dashboard keybindings
+(my/leader-keys
+  "d" '(:ignore t :which-key "dashboard")
+  "d d" '(dashboard-open :which-key "Open dashboard")
+  "d r" '(dashboard-refresh-buffer :which-key "Refresh dashboard")
+  "d a" '(projectile-add-known-project :which-key "Add project"))
+
+;; Helper function to add common projects
+(defun my/add-common-projects ()
+  "Add common project directories to projectile."
+  (interactive)
+  (let ((common-projects '("~/.emacs.d" "~/.dotfiles" "~/workspaces" "~/projects" "~/code")))
+    (dolist (project common-projects)
+      (when (file-exists-p (expand-file-name project))
+        (projectile-add-known-project project)))))
+
 (add-hook 'emacs-startup-hook
           (lambda ()
             (message "Emacs ready in %.2f seconds with %d garbage collections."
