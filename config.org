@@ -9,19 +9,20 @@
 
 * TABLE OF CONTENTS :toc:
 - [[#startup-essentials][Startup Essentials]]
+  - [[#performance-optimization][Performance Optimization]]
   - [[#package-manager-straightel][Package Manager (straight.el)]]
   - [[#evil-mode-vim-emulation][Evil Mode (Vim Emulation)]]
   - [[#general-keybindings-hotkeys][General Keybindings (hotkeys)]]
-- [[#startup-services][Startup Services]]
+- [[#all-the-icons][ALL THE ICONS]]
+- [[#backup-strategy][Backup Strategy]]
+- [[#buffer-move][Buffer-Move]]
 - [[#fonts][Fonts]]
   - [[#font-face][Font Face]]
   - [[#zoom-inout][Zoom In/Out]]
 - [[#gui-tweaks][GUI Tweaks]]
-  - [[#menubar-toolbar--scrollbar][Menubar, Toolbar & Scrollbar]]
   - [[#line-numbering][Line Numbering]]
-- [[#buffer-move][Buffer-Move]]
-- [[#window-focus-enhancement][Window Focus Enhancement]]
-- [[#backup-strategy][Backup Strategy]]
+  - [[#menubar-toolbar--scrollbar][Menubar, Toolbar & Scrollbar]]
+- [[#ivy-counsel][Ivy (COUNSEL)]]
 - [[#org-mode-enhancements][Org Mode Enhancements]]
   - [[#enable-toc--org-bullets][Enable TOC & Org Bullets]]
   - [[#org-tempo][Org Tempo]]
@@ -30,13 +31,28 @@
   - [[#eshell][Eshell]]
   - [[#vterm][Vterm]]
   - [[#vterm-toggle][Vterm-Toggle]]
-- [[#which-key][Which-Key]]
-- [[#ivy-counsel][IVY (COUNSEL)]]
-- [[#all-the-icons][ALL THE ICONS]]
+- [[#theme-doom-themes][Theme (Doom Themes)]]
 - [[#transparency][Transparency]]
-- [[#theme-minimal-dark][Theme (Minimal Dark)]]
+- [[#window-focus-enhancement][Window Focus Enhancement]]
+- [[#which-key][Which-Key]]
+- [[#startup-completion-message][Startup Completion Message]]
 
 * Startup Essentials
+** Performance Optimization
+#+BEGIN_SRC emacs-lisp
+;; Increase garbage collection threshold during startup for better performance
+(setq gc-cons-threshold (* 50 1024 1024)) ; 50MB
+;; Reset to normal threshold after startup
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq gc-cons-threshold (* 16 1024 1024)))) ; 16MB
+
+;; Security settings
+(setq enable-local-variables :safe
+      enable-local-eval nil
+      read-process-output-max (* 1024 1024)) ; 1MB
+#+END_SRC
+
 ** Package Manager (straight.el)
 #+BEGIN_SRC emacs-lisp
 (defvar bootstrap-version)
@@ -56,7 +72,8 @@
   (load bootstrap-file nil 'nomessage))
 
 (straight-use-package 'use-package)
-(setq straight-use-package-by-default t)
+(setq straight-use-package-by-default t
+      straight-check-for-modifications '(find-when-checking))
 #+END_SRC
 
 ** Evil Mode (Vim Emulation)
@@ -71,34 +88,12 @@
 (require 'evil)
 (evil-mode 1)
 
-;; Add C-d, C-u, and C-r keybindings for Evil mode
-;; Note: C-u needs special handling due to Emacs universal argument
+;; Scrolling & redo keybindings for all evil states
 (with-eval-after-load 'evil
-  ;; Scrolling keybindings
-  (define-key evil-normal-state-map (kbd "C-d") 'evil-scroll-down)
-  (define-key evil-visual-state-map (kbd "C-d") 'evil-scroll-down)
-  
-  (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
-  (define-key evil-visual-state-map (kbd "C-u") 'evil-scroll-up)
-  (define-key evil-insert-state-map (kbd "C-u") 'evil-scroll-up)
-  
-  ;; Redo keybinding - use undo-redo instead of evil-redo
-  (define-key evil-normal-state-map (kbd "C-r") 'undo-redo)
-  (define-key evil-visual-state-map (kbd "C-r") 'undo-redo)
-  (define-key evil-insert-state-map (kbd "C-r") 'undo-redo))
-
-;; Ensure keybindings work even after evil-collection loads
-(with-eval-after-load 'evil-collection
-  ;; Scrolling keybindings
-  (define-key evil-normal-state-map (kbd "C-d") 'evil-scroll-down)
-  (define-key evil-visual-state-map (kbd "C-d") 'evil-scroll-down)
-  (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
-  (define-key evil-visual-state-map (kbd "C-u") 'evil-scroll-up)
-  
-  ;; Redo keybinding - use undo-redo instead of evil-redo
-  (define-key evil-normal-state-map (kbd "C-r") 'undo-redo)
-  (define-key evil-visual-state-map (kbd "C-r") 'undo-redo)
-  (define-key evil-insert-state-map (kbd "C-r") 'undo-redo))
+  (dolist (map '(evil-normal-state-map evil-visual-state-map evil-insert-state-map))
+    (define-key (symbol-value map) (kbd "C-d") 'evil-scroll-down)
+    (define-key (symbol-value map) (kbd "C-u") 'evil-scroll-up)
+    (define-key (symbol-value map) (kbd "C-r") 'undo-redo)))
 
 (straight-use-package 'evil-collection)
 (with-eval-after-load 'evil
@@ -138,6 +133,41 @@
  "f p" '(sudo-edit-find-file :which-key "Sudo find file")
  "f P" '(sudo-edit :which-key "Sudo edit file")
 
+ ;; Help
+ "h" '(:ignore t :which-key "Help")
+ "h f" '(counsel-describe-function :which-key "Describe function")
+ "h v" '(counsel-describe-variable :which-key "Describe variable")
+ "h r r" '((lambda () (interactive)
+             (load-file "~/.emacs.d/init.el"))
+            :which-key "Reload emacs config")
+
+ ;; Search
+ "s" '(:ignore t :which-key "search")
+ "s f" '(counsel-rg :which-key "Search in files")
+ "s b" '(counsel-switch-buffer :which-key "Search buffers")
+ "s m" '(counsel-imenu :which-key "Search in buffer")
+ "s F" '(counsel-find-file :which-key "Find file fuzzy")
+ "s R" '(counsel-recentf :which-key "Recent files")
+
+ ;; Evaluate
+ "e" '(:ignore t :which-key "Eshell/Evaluate")    
+ "e b" '(eval-buffer :which-key "Evaluate elisp in buffer")
+ "e d" '(eval-defun :which-key "Evaluate defun containing or after point")
+ "e e" '(eval-expression :which-key "Evaluate and elisp expression")
+ "e h" '(counsel-esh-history :which-key "Eshell history")
+ "e l" '(eval-last-sexp :which-key "Evaluate elisp expression before point")
+ "e r" '(eval-region :which-key "Evaluate elisp in region")
+ "e s" '(eshell :which-key "Eshell")
+
+ ;; Toggle
+ "t" '(:ignore t :which-key "Toggle")
+ "t l" '(display-line-numbers-mode :which-key "Toggle line numbers")
+ "t t" '(visual-line-mode :which-key "Toggle truncated lines")
+ "t e" '(eshell :which-key "Open eshell")
+ "t V" '(my/vterm :which-key "Open vterm")
+ "t v" '(my/vterm-toggle :which-key "Toggle vterm")
+ "t T" '(toggle-transparency :which-key "Toggle transparency")
+
  ;; Window
  "w"  '(:ignore t :which-key "window")
  "w v" '(split-window-right :which-key "Split vertical")
@@ -155,76 +185,70 @@
  "w K" '(buf-move-up :which-key "Buffer move up")
  "w L" '(buf-move-right :which-key "Buffer move right")
 
- ;; Search
- "s" '(:ignore t :which-key "search")
- "s f" '(counsel-rg :which-key "Search in files")
- "s b" '(counsel-switch-buffer :which-key "Search buffers")
- "s m" '(counsel-imenu :which-key "Search in buffer")
-
- ;; Evaluate
- "e" '(:ignore t :which-key "Evaluate")    
- "e b" '(eval-buffer :which-key "Evaluate elisp in buffer")
- "e d" '(eval-defun :which-key "Evaluate defun containing or after point")
- "e e" '(eval-expression :which-key "Evaluate an elisp expression")
- "e l" '(eval-last-sexp :which-key "Evaluate elisp expression before point")
- "e r" '(eval-region :which-key "Evaluate elisp in region")
-
- ;; Help
- "h" '(:ignore t :which-key "Help")
- "h f" '(counsel-describe-function :which-key "Describe function")
- "h v" '(counsel-describe-variable :which-key "Describe variable")
- "h r r" '((lambda () (interactive)
-             (load-file "~/.emacs.d/init.el"))
-            :which-key "Reload emacs config")
-
- ;; Toggle
- "t" '(:ignore t :which-key "Toggle")
- "t l" '(display-line-numbers-mode :which-key "Toggle line numbers")
- "t t" '(visual-line-mode :which-key "Toggle truncated lines")
- "t e" '(eshell :which-key "Open eshell")
- "t V" '(my/vterm :which-key "Open vterm")
- "t v" '(my/vterm-toggle :which-key "Toggle vterm")
-
  ;; Applications
  "a" '(:ignore t :which-key "applications")
  "a a" '(counsel-M-x :which-key "M-x")
- "a r" '(ivy-resume :which-key "Resume last search"))
+ "a r" '(ivy-resume :which-key "Resume last search")
+ "q q" '(save-buffers-kill-terminal :which-key "Quit Emacs"))
 #+END_SRC
 
-* Startup Services
+* ALL THE ICONS
 #+BEGIN_SRC emacs-lisp
-(add-hook 'emacs-startup-hook
-          (lambda ()
-            (which-key-mode 1)
-            (global-visual-line-mode 1)
-            (global-display-line-numbers-mode 1)
-            (setq display-line-numbers-type 'relative)
-            (recentf-mode 1)
-            (column-number-mode 1)
-            (display-time-mode 1)))
+(straight-use-package 'all-the-icons)
+(straight-use-package 'all-the-icons-dired)
+
+(with-eval-after-load 'dired
+  (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
+#+END_SRC
+
+* Backup Strategy
+#+BEGIN_SRC emacs-lisp
+(setq backup-directory-alist `(("." . "~/.emacs.d/backups"))
+      version-control t
+      kept-new-versions 5
+      kept-old-versions 2
+      delete-old-versions t)
+(unless (file-exists-p "~/.emacs.d/backups")
+  (make-directory "~/.emacs.d/backups" t))
+
+;; Auto-save files
+(setq auto-save-file-name-transforms `((".*" "~/.emacs.d/auto-save-list/" t)))
+(unless (file-exists-p "~/.emacs.d/auto-save-list")
+  (make-directory "~/.emacs.d/auto-save-list" t))
+#+END_SRC
+
+* Buffer-Move
+#+BEGIN_SRC emacs-lisp
+(straight-use-package 'buffer-move)
+(require 'buffer-move)
 #+END_SRC
 
 * Fonts
 ** Font Face
 #+BEGIN_SRC emacs-lisp
-;; Use system fonts that are guaranteed to be available on macOS
 (when (display-graphic-p)
-  (when (member "SF Mono" (font-family-list))
-    (set-face-attribute 'default nil :font "SF Mono" :height 110 :weight 'medium)
-    (add-to-list 'default-frame-alist '(font . "SF Mono-11")))
-  
-  (when (member "Helvetica" (font-family-list))
-    (set-face-attribute 'variable-pitch nil :font "Helvetica" :height 120 :weight 'medium)))
+  (let ((default-font (or (car (member "JetBrains Mono" (font-family-list)))
+                          (car (member "SF Mono" (font-family-list))))))
+    (when default-font
+      (set-face-attribute 'default nil :font default-font :height 110 :weight 'medium)
+      (add-to-list 'default-frame-alist `(font . ,(concat default-font "-11"))))))
 
-;; Use JetBrains Mono if available (when display is available)
-(when (and (display-graphic-p) (member "JetBrains Mono" (font-family-list)))
-  (set-face-attribute 'default nil :font "JetBrains Mono" :height 110 :weight 'medium)
-  (add-to-list 'default-frame-alist '(font . "JetBrains Mono-11")))
-
+;; Variable-pitch font
 (when (and (display-graphic-p) (member "Ubuntu" (font-family-list)))
-  (set-face-attribute 'variable-pitch nil :font "Ubuntu" :height 120 :weight 'medium)
-  (set-face-attribute 'fixed-pitch nil :font "JetBrains Mono" :height 110 :weight 'medium))
+  (set-face-attribute 'variable-pitch nil :font "Ubuntu" :height 120 :weight 'medium))
 
+;; Terminal font configuration for better icon support
+(when (display-graphic-p)
+  (let ((terminal-font (or (car (member "JetBrains Mono" (font-family-list)))
+                          (car (member "SF Mono" (font-family-list)))
+                          (car (member "Monaco" (font-family-list))))))
+    (when terminal-font
+      ;; Set vterm font after vterm is loaded
+      (with-eval-after-load 'vterm
+        (when (facep 'vterm)
+          (set-face-attribute 'vterm nil :font terminal-font :height 110))))))
+
+;; Syntax styling
 (set-face-attribute 'font-lock-comment-face nil :slant 'italic)
 (set-face-attribute 'font-lock-keyword-face nil :slant 'italic)
 (setq-default line-spacing 0.12)
@@ -239,6 +263,12 @@
 #+END_SRC
 
 * GUI Tweaks
+** Line Numbering
+#+BEGIN_SRC emacs-lisp
+(setq display-line-numbers-type 'relative)
+(global-display-line-numbers-mode)
+#+END_SRC
+
 ** Menubar, Toolbar & Scrollbar
 #+BEGIN_SRC emacs-lisp
 (menu-bar-mode -1)
@@ -250,230 +280,52 @@
   (set-frame-parameter (selected-frame) 'undecorated-round t))
 #+END_SRC
 
-** Line Numbering
-#+BEGIN_SRC emacs-lisp
-;; Line numbering is configured in Startup Services section
-#+END_SRC
-
-* Buffer-Move
-#+begin_src emacs-lisp
-  (straight-use-package 'buffer-move)
-  (require 'buffer-move)
-#+end_src
-
-* Window Focus Enhancement
-#+BEGIN_SRC emacs-lisp
-;; Automatically move focus to newly created split windows
-(defun my/select-new-window (original-function &rest args)
-  "Advice function to select the newly created window after splitting."
-  (let ((original-window (selected-window)))
-    (apply original-function args)
-    (let ((new-window (next-window original-window)))
-      (when (and new-window (not (eq new-window original-window)))
-        (select-window new-window)))))
-
-;; Apply the advice to window splitting functions
-(advice-add 'split-window-right :around 'my/select-new-window)
-(advice-add 'split-window-below :around 'my/select-new-window)
-(advice-add 'evil-window-new :around 'my/select-new-window)
-
-;; Also handle evil's split commands if they exist
-(when (fboundp 'evil-window-split)
-  (advice-add 'evil-window-split :around 'my/select-new-window))
-(when (fboundp 'evil-window-vsplit)
-  (advice-add 'evil-window-vsplit :around 'my/select-new-window))
-#+END_SRC
-* Backup Strategy
-#+BEGIN_SRC emacs-lisp
-(setq backup-directory-alist `(("." . "~/.emacs.d/backups"))
-      version-control t
-      kept-new-versions 5
-      kept-old-versions 2
-      delete-old-versions t)
-(unless (file-exists-p "~/.emacs.d/backups")
-  (make-directory "~/.emacs.d/backups" t))
-#+END_SRC
-
-* Org Mode Enhancements
-** Enable TOC & Org Bullets
-#+BEGIN_SRC emacs-lisp
-(straight-use-package 'toc-org)
-(straight-use-package 'org-bullets)
-
-(add-hook 'org-mode-hook
-          (lambda ()
-            (org-indent-mode 1)
-            (org-bullets-mode 1)
-            (toc-org-enable)))
-
-(setq org-bullets-bullet-list '("◉" "○" "◈" "◇" "▪" "▫"))
-#+END_SRC
-
-** Org Tempo
-#+BEGIN_SRC emacs-lisp
-(require 'org-tempo)
-#+END_SRC
-
-* SUDO Edit
-#+BEGIN_SRC emacs-lisp
-(use-package sudo-edit
-  :config
-  (my/leader-keys
-    "f p" '(sudo-edit-find-file :which-key "Sudo find file")
-    "f P" '(sudo-edit :which-key "Sudo edit file")))
-#+END_SRC
-
-* Shells & Terminal
-** Eshell
-#+BEGIN_SRC emacs-lisp
-(straight-use-package 'eshell-syntax-highlighting)
-
-;; Eshell configuration
-(setq eshell-rc-script (concat user-emacs-directory "eshell/profile")
-      eshell-aliases-file (concat user-emacs-directory "eshell/aliases")
-      eshell-history-size 5000
-      eshell-buffer-maximum-lines 5000
-      eshell-hist-ignoredups t
-      eshell-scroll-to-bottom-on-input 'all
-      eshell-destroy-buffer-when-process-dies t
-      eshell-visual-commands '("bash" "fish" "htop" "ssh" "top" "zsh")
-      eshell-scroll-show-maximum-output t
-      eshell-buffer-maximum-lines 10000
-      eshell-prompt-regexp "^[^#$%>\n]*[#$%>] *"
-      eshell-highlight-prompt t
-      eshell-prompt-function
-      (lambda nil
-        (concat
-         (propertize (abbreviate-file-name (eshell/pwd)) 'face 'eshell-prompt)
-         (propertize " $ " 'face 'eshell-prompt))))
-
-;; Ensure eshell directories exist
-(let ((eshell-dir (concat user-emacs-directory "eshell")))
-  (unless (file-exists-p eshell-dir)
-    (make-directory eshell-dir t))
-  (unless (file-exists-p eshell-rc-script)
-    (write-region "# Eshell profile\n# This file is loaded when eshell starts\n\necho \"Welcome to Eshell!\"\n" nil eshell-rc-script))
-  (unless (file-exists-p eshell-aliases-file)
-    (write-region "# Eshell aliases\n# Add your custom aliases here\n\nalias ll 'ls -la'\nalias .. 'cd ..'\nalias c 'clear'\n" nil eshell-aliases-file)))
-
-;; Eshell syntax highlighting
-(with-eval-after-load 'esh-mode
-  (when (require 'eshell-syntax-highlighting nil t)
-    (eshell-syntax-highlighting-global-mode +1)))
-
-;; Eshell behavior improvements
-(setq eshell-scroll-to-bottom-on-input 'all
-      eshell-scroll-show-maximum-output t
-      eshell-buffer-maximum-lines 10000
-      eshell-prompt-regexp "^[^#$%>\n]*[#$%>] *"
-      eshell-highlight-prompt t)
-
-;; Eshell aliases and functions
-(defun eshell/clear ()
-  "Clear the eshell buffer."
-  (interactive)
-  (let ((inhibit-read-only t))
-    (erase-buffer)))
-
-;; Better eshell navigation
-(defun eshell-previous-prompt ()
-  "Go to previous prompt."
-  (interactive)
-  (eshell-bol)
-  (re-search-backward eshell-prompt-regexp nil t))
-
-(defun eshell-next-prompt ()
-  "Go to next prompt."
-  (interactive)
-  (re-search-forward eshell-prompt-regexp nil t))
-
-;; Keybindings for eshell
-(with-eval-after-load 'eshell
-  (define-key eshell-mode-map (kbd "C-c C-p") 'eshell-previous-prompt)
-  (define-key eshell-mode-map (kbd "C-c C-n") 'eshell-next-prompt)
-  (define-key eshell-mode-map (kbd "C-c C-l") 'eshell/clear))
-
-;; Global keybindings for eshell
-(global-set-key (kbd "C-c e") 'eshell)
-#+END_SRC
-
-** Vterm
-#+BEGIN_SRC emacs-lisp
-(straight-use-package 'vterm)
-
-;; Define vterm keybindings without loading the package
-(defun my/vterm ()
-  "Open vterm, compiling module if needed"
-  (interactive)
-  (when (require 'vterm nil t)
-    (vterm)))
-
-;; Vterm configuration (only when loaded)
-(with-eval-after-load 'vterm
-  (setq vterm-max-scrollback 10000)
-  (setq vterm-kill-buffer-on-exit t)
-  (define-key vterm-mode-map (kbd "C-c C-c") 'vterm-send-C-c)
-  (define-key vterm-mode-map (kbd "C-c C-j") 'vterm-send-C-j)
-  (define-key vterm-mode-map (kbd "C-c C-k") 'vterm-send-C-k)
-  (define-key vterm-mode-map (kbd "C-c C-l") 'vterm-send-C-l))
-#+END_SRC
-
-** Vterm-Toggle
-#+BEGIN_SRC emacs-lisp
-(straight-use-package 'vterm-toggle)
-
-;; Define vterm-toggle function without loading the package
-(defun my/vterm-toggle ()
-  "Toggle vterm, compiling module if needed"
-  (interactive)
-  (when (require 'vterm-toggle nil t)
-    (vterm-toggle)))
-
-;; Vterm-toggle configuration (only when loaded)
-(with-eval-after-load 'vterm-toggle
-  (setq vterm-toggle-fullscreen-p nil)
-  (setq vterm-toggle-scope 'project)
-  (add-to-list 'display-buffer-alist
-               '((lambda (buffer-or-name _)
-                   (let ((buffer (get-buffer buffer-or-name)))
-                     (with-current-buffer buffer
-                       (equal major-mode 'vterm-mode))))
-                 (display-buffer-reuse-window display-buffer-same-window)
-                 (reusable-frames . visible))))
-#+END_SRC
-* Which-Key
-#+BEGIN_SRC emacs-lisp
-(straight-use-package 'which-key)
-(require 'which-key)
-(which-key-mode 1)
-
-(setq which-key-side-window-location 'bottom
-      which-key-sort-order #'which-key-key-order-alpha
-      which-key-sort-uppercase-first nil
-      which-key-add-column-padding 1
-      which-key-min-display-lines 6
-      which-key-idle-delay 0.8
-      which-key-separator "   ")
-#+END_SRC
-
-* IVY (COUNSEL)
+* Ivy (COUNSEL)
 #+BEGIN_SRC emacs-lisp
 (straight-use-package 'ivy)
 (straight-use-package 'counsel)
 (straight-use-package 'ivy-rich)
 (straight-use-package 'swiper)
 (straight-use-package 'all-the-icons-ivy-rich)
+(straight-use-package 'flx)  ; Better fuzzy matching
+(straight-use-package 'prescient)  ; Smart sorting and filtering
 
 (setq ivy-use-virtual-buffers t
       ivy-count-format "(%d/%d) "
-      enable-recursive-minibuffers t)
+      enable-recursive-minibuffers t
+      ;; Advanced fuzzy matching
+      ivy-re-builders-alist '((t . ivy--regex-fuzzy)
+                              (counsel-rg . ivy--regex-plus)
+                              (counsel-ag . ivy--regex-plus)
+                              (counsel-pt . ivy--regex-plus)
+                              (counsel-grep . ivy--regex-plus)
+                              (swiper . ivy--regex-plus)
+                              (swiper-isearch . ivy--regex-plus))
+      ;; Better sorting
+      ivy-sort-functions-alist '((counsel-find-file . ivy-sort-files-alphabetically)
+                                 (counsel-recentf . ivy-sort-files-by-mtime)
+                                 (counsel-buffer . ivy-sort-buffer-by-mtime))
+      ;; Case insensitive by default
+      ivy-case-fold-search-default t
+      ;; Better regex handling
+      ivy-initial-inputs-alist nil)
 
 (ivy-mode 1)
 (counsel-mode 1)
 (ivy-rich-mode 1)
 
-;; Enable all-the-icons-ivy-rich for better visual experience
-;; Use a hook to ensure it loads after all-the-icons
+;; Enable advanced fuzzy matching with flx (if available)
+(when (require 'flx nil t)
+  (setq ivy-flx-limit 10000))
+
+;; Enable prescient for smart sorting (if available)
+(when (require 'prescient nil t)
+  (prescient-persist-mode 1)
+  (setq prescient-save-file (expand-file-name "prescient-save.el" user-emacs-directory))
+  (setq ivy-prescient-retain-classic-highlighting t)
+  (when (fboundp 'ivy-prescient-mode)
+    (ivy-prescient-mode 1)))
+
 (add-hook 'after-init-hook
           (lambda ()
             (when (require 'all-the-icons-ivy-rich nil t)
@@ -489,45 +341,267 @@
 (global-set-key (kbd "C-c C-r") 'ivy-resume)
 (global-set-key (kbd "C-x B") 'ivy-switch-buffer-other-window)
 (global-set-key (kbd "C-S-s") 'swiper)
-(global-set-key (kbd "C-S-r") 'swiper-backward)
+(global-set-key (kbd "C-S-r") 'swiper-isearch-backward)
 (global-set-key (kbd "M-x") 'counsel-M-x)
 (global-set-key (kbd "C-x C-f") 'counsel-find-file)
 (global-set-key (kbd "C-x b") 'ivy-switch-buffer)
 (global-set-key (kbd "C-h f") 'counsel-describe-function)
 (global-set-key (kbd "C-h v") 'counsel-describe-variable)
 
-;; Additional buffer-move keybindings (Emacs wiki style)
+;; Buffer move keys
 (global-set-key (kbd "<C-S-up>")     'buf-move-up)
 (global-set-key (kbd "<C-S-down>")   'buf-move-down)
 (global-set-key (kbd "<C-S-left>")   'buf-move-left)
 (global-set-key (kbd "<C-S-right>")  'buf-move-right)
 
-;; Global keybindings for vterm-toggle
+;; Global vterm-toggle keys
 (global-set-key (kbd "C-c t") 'my/vterm-toggle)
 (global-set-key (kbd "C-c T") 'my/vterm-toggle)
+
+;; Additional vterm navigation keys (only if vterm is available)
+(when (fboundp 'vterm-mode)
+  (with-eval-after-load 'vterm
+    (when (boundp 'vterm-mode-map)
+      (define-key vterm-mode-map (kbd "C-c C-j") 'vterm-send-down)
+      (define-key vterm-mode-map (kbd "C-c C-k") 'vterm-send-up)
+      (define-key vterm-mode-map (kbd "C-c C-l") 'vterm-send-right)
+      (define-key vterm-mode-map (kbd "C-c C-h") 'vterm-send-left)
+      (define-key vterm-mode-map (kbd "C-c C-c") 'vterm-send-C-c)
+      (define-key vterm-mode-map (kbd "C-c C-d") 'vterm-send-C-d))))
 #+END_SRC
 
-* ALL THE ICONS
+* Org Mode Enhancements
+** Enable TOC & Org Bullets
 #+BEGIN_SRC emacs-lisp
-(straight-use-package 'all-the-icons)
-(straight-use-package 'all-the-icons-dired)
+(straight-use-package 'toc-org)
+(straight-use-package 'org-bullets)
 
-(with-eval-after-load 'dired
-  (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
+;; Enable proper link following in org-mode
+(setq org-link-search-must-match-exact-headline nil
+      org-link-search-headline-must-match-exact nil)
+
+;; Configure org-mode for better link handling
+(with-eval-after-load 'org
+  ;; Enable link following with mouse clicks
+  (setq org-return-follows-link t)
+  ;; Enable link following with keyboard
+  (setq org-tab-follows-link t)
+  ;; Make sure internal links work properly
+  (setq org-link-search-must-match-exact-headline nil)
+  
+  ;; Explicitly bind keys for link following
+  (define-key org-mode-map (kbd "RET") 'org-open-at-point)
+  (define-key org-mode-map (kbd "TAB") 'org-next-link)
+  (define-key org-mode-map (kbd "S-TAB") 'org-previous-link)
+  ;; Alternative keybinding for RET if the above doesn't work
+  (define-key org-mode-map (kbd "C-c C-o") 'org-open-at-point))
+
+(add-hook 'org-mode-hook
+          (lambda ()
+            (org-indent-mode 1)
+            (org-bullets-mode 1)
+            (toc-org-enable)
+            ;; Ensure keyboard navigation works
+            (local-set-key (kbd "RET") 'org-open-at-point)
+            (local-set-key (kbd "TAB") 'org-next-link)
+            (local-set-key (kbd "S-TAB") 'org-previous-link)))
+
+(setq org-bullets-bullet-list '("◉" "○" "◈" "◇" "▪" "▫"))
+#+END_SRC
+
+** Org Tempo
+#+BEGIN_SRC emacs-lisp
+(require 'org-tempo)
+#+END_SRC
+
+* SUDO Edit
+#+BEGIN_SRC emacs-lisp
+(straight-use-package 'sudo-edit)
+(require 'sudo-edit)
+
+(my/leader-keys
+  "f p" '(sudo-edit-find-file :which-key "Sudo find file")
+  "f P" '(sudo-edit :which-key "Sudo edit file"))
+#+END_SRC
+
+* Shells & Terminal
+** Eshell
+#+BEGIN_SRC emacs-lisp
+(straight-use-package 'eshell-syntax-highlighting)
+
+(setq eshell-rc-script (concat user-emacs-directory "eshell/profile")
+      eshell-aliases-file (concat user-emacs-directory "eshell/aliases")
+      eshell-history-size 5000
+      eshell-buffer-maximum-lines 10000
+      eshell-hist-ignoredups t
+      eshell-scroll-to-bottom-on-input 'all
+      eshell-destroy-buffer-when-process-dies t
+      eshell-visual-commands '("bash" "fish" "htop" "ssh" "top" "zsh")
+      eshell-highlight-prompt t
+      eshell-prompt-regexp "^[^#$%>\n]*[#$%>] *"
+      eshell-prompt-function
+      (lambda nil
+        (concat
+         (propertize (abbreviate-file-name (eshell/pwd)) 'face 'eshell-prompt)
+         (propertize " $ " 'face 'eshell-prompt))))
+
+(let ((eshell-dir (concat user-emacs-directory "eshell")))
+  (unless (file-exists-p eshell-dir) (make-directory eshell-dir t))
+  (unless (file-exists-p eshell-rc-script)
+    (write-region "# Eshell profile\n\necho \"Welcome to Eshell!\"\n" nil eshell-rc-script))
+  (unless (file-exists-p eshell-aliases-file)
+    (write-region "# Eshell aliases\nalias ll 'ls -la'\nalias .. 'cd ..'\nalias c 'clear'\n" nil eshell-aliases-file)))
+
+(with-eval-after-load 'esh-mode
+  (when (require 'eshell-syntax-highlighting nil t)
+    (eshell-syntax-highlighting-global-mode +1)))
+
+(defun eshell/clear () (interactive) (let ((inhibit-read-only t)) (erase-buffer)))
+(defun eshell-previous-prompt () (interactive) (eshell-bol) (re-search-backward eshell-prompt-regexp nil t))
+(defun eshell-next-prompt () (interactive) (re-search-forward eshell-prompt-regexp nil t))
+
+(with-eval-after-load 'eshell
+  (define-key eshell-mode-map (kbd "C-c C-p") 'eshell-previous-prompt)
+  (define-key eshell-mode-map (kbd "C-c C-n") 'eshell-next-prompt))
+#+END_SRC
+
+** Vterm
+#+BEGIN_SRC emacs-lisp
+(straight-use-package 'vterm)
+
+;; Optimized vterm configuration for normal terminal behavior
+(setq vterm-max-scrollback 10000
+      vterm-buffer-name-string "vterm %s"
+      vterm-kill-buffer-on-exit t
+      vterm-timer-delay 0.01  ; Fast updates like normal terminal
+      vterm-use-vterm-prompt-detection-method t  ; Enable for proper prompt handling
+      vterm-module-cmake-args "-DUSE_SYSTEM_LIBVTERM=off"
+      ;; Prevent unwanted scrolling
+      vterm-scroll-to-bottom-on-input nil
+      vterm-scroll-to-bottom-on-output nil
+      ;; Additional terminal-like behavior
+      vterm-clear-scrollback t)
+
+;; Configure vterm mode for normal terminal behavior
+(add-hook 'vterm-mode-hook
+          (lambda ()
+            ;; Disable auto-scrolling to prevent first row scrolling up
+            (setq-local scroll-margin 0)
+            (setq-local scroll-conservatively 0)
+            (setq-local scroll-preserve-screen-position nil)
+            ;; Keep cursor at bottom naturally
+            (setq-local scroll-step 1)))
+
+;; Optimized vterm function
+(defun my/vterm ()
+  "Open vterm in a new buffer with normal terminal behavior."
+  (interactive)
+  (condition-case err
+      (progn
+        (require 'vterm)
+        (let ((buf (vterm (generate-new-buffer-name "*vterm*"))))
+          ;; Ensure proper terminal behavior
+          (with-current-buffer buf
+            (setq-local scroll-margin 0)
+            (setq-local scroll-conservatively 0))
+          buf))
+    (error (message "vterm failed: %s" (error-message-string err))
+           (eshell))))
+#+END_SRC
+
+** Vterm-Toggle
+#+BEGIN_SRC emacs-lisp
+(straight-use-package 'vterm-toggle)
+
+;; Safe vterm-toggle configuration
+(defun my/vterm-toggle-safe-init ()
+  "Safely initialize vterm-toggle with error handling."
+  (condition-case err
+      (progn
+        (require 'vterm-toggle)
+        (setq vterm-toggle-fullscreen-p nil
+              vterm-toggle-scope 'project)
+        (message "vterm-toggle loaded successfully")
+        t)
+    (error (message "Failed to load vterm-toggle: %s" (error-message-string err))
+           nil)))
+
+;; Only configure if vterm-toggle loads successfully
+(when (my/vterm-toggle-safe-init)
+  (defun my/vterm-toggle ()
+    "Toggle vterm in current project with error handling."
+    (interactive)
+    (condition-case err
+        (vterm-toggle)
+      (error (message "Failed to toggle vterm: %s" (error-message-string err))
+             (eshell)))))  ; Fallback to eshell
+#+END_SRC
+
+* Theme (Doom Themes)
+#+BEGIN_SRC emacs-lisp
+(straight-use-package 'doom-themes)
+(require 'doom-themes)
+
+;; Global settings (defaults)
+(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+      doom-themes-enable-italic t) ; if nil, italics is universally disabled
+
+;; Load the theme (doom-one, doom-vibrant, doom-city-lights, doom-tokyo-night, etc.)
+;; Ensure theme loads after doom-themes is fully initialized
+(with-eval-after-load 'doom-themes
+  (condition-case nil
+      (load-theme 'doom-tokyo-night t)
+    (error (message "Failed to load doom-tokyo-night theme, falling back to doom-one")
+           (load-theme 'doom-one t))))
+
+;; Enable flashing mode-line on errors
+(doom-themes-visual-bell-config)
+
+;; Enable custom neotree theme (all-the-icons must be installed!)
+(doom-themes-neotree-config)
+;; or for treemacs users
+(doom-themes-treemacs-config)
+
+;; Corrects (and improves) org-mode's native fontification.
+(doom-themes-org-config)
 #+END_SRC
 
 * Transparency
 #+BEGIN_SRC emacs-lisp
-(when (display-graphic-p)
-  (add-to-list 'default-frame-alist '(alpha . (100 . 100)))
-  (set-frame-parameter (selected-frame) 'alpha '(100 . 100))
+(defun toggle-transparency ()
+  "Toggle transparency between 100 and 90%."
+  (interactive)
+  (let ((alpha (frame-parameter nil 'alpha)))
+    (set-frame-parameter nil 'alpha
+                         (if (equal alpha '(100 . 100))
+                             '(90 . 90)
+                           '(100 . 100)))))
 
-  (when (eq system-type 'darwin)
-    (add-to-list 'default-frame-alist '(ns-appearance . dark))
-    (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))))
+(set-frame-parameter (selected-frame) 'alpha '(100 . 100))
 #+END_SRC
 
-* Theme (Minimal Dark)
+* Window Focus Enhancement
 #+BEGIN_SRC emacs-lisp
-(load-theme 'tango-dark t)
+(windmove-default-keybindings)
+
+;; Auto-focus new windows
+(advice-add 'split-window-below :after #'other-window)
+(advice-add 'split-window-right :after #'other-window)
+#+END_SRC
+
+* Which-Key
+#+BEGIN_SRC emacs-lisp
+(straight-use-package 'which-key)
+(require 'which-key)
+(setq which-key-idle-delay 0.3)
+(which-key-mode)
+#+END_SRC
+
+* Startup Completion Message
+#+BEGIN_SRC emacs-lisp
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (message "Emacs ready in %.2f seconds with %d garbage collections."
+                     (float-time (time-subtract after-init-time before-init-time))
+                     gcs-done)))
 #+END_SRC
