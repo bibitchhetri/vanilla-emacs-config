@@ -1,0 +1,23 @@
+# Eshell aliases
+
+# Common aliases
+alias ll 'ls -la'
+alias la 'ls -la'
+alias l 'ls -CF'
+alias .. 'cd ..'
+alias ... 'cd ../..'
+alias .... 'cd ../../..'
+
+# Git aliases
+alias gs 'git status'
+alias ga 'git add'
+alias gc 'git commit'
+alias gp 'git push'
+alias gl 'git log --oneline'
+
+# Directory navigation
+alias home 'cd ~'
+alias emacs 'cd ~/.emacs.d'
+
+# Clear screen
+alias c 'clear'
