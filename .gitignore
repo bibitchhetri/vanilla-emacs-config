@@ -1,20 +1,46 @@
-# Ignore auto-save and backup files
-auto-save-list/
-backups/
+# Emacs Temporary, Backup, and Lock Files
+# Autosave files (e.g., #filename#)
+\#*\#
+
+# Lock files (e.g., .#filename)
+.\#*
+
+# Backup files
 *.el~
 *~
+auto-save-list/
+backups/
 
-# Ignore native compilation cache
+
+# Eshell Files
+# Eshell temporary and session files
+eshell/#*
+eshell/.\#*
+eshell/lastdir
+eshell/history
+
+
+# Emacs Cache, Native Compilation, and State
+# Native compilation cache
 eln-cache/
 
-# Ignore straight.el build artifacts
+# Tramp and session tracking
+tramp
+recentf
+
+# Local configuration/state directories
+.local/
+
+
+# Package Manager (straight.el / Doom Emacs)
+# Straight.el build artifacts
 straight/
 
-# Ignore system files
+# Doom-specific generated files (optional, safe to ignore)
+.cache/
+etc/
+var/
+
+# System and OS Files
 .DS_Store
 Thumbs.db
-
-.local/
-recentf
-tramp
-eshell/history
