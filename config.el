@@ -183,13 +183,36 @@
 (when (fboundp 'evil-window-vsplit)
   (advice-add 'evil-window-vsplit :around 'my/select-new-window))
 
-(setq backup-directory-alist `(("." . "~/.emacs.d/backups"))
-      version-control t
-      kept-new-versions 5
-      kept-old-versions 2
-      delete-old-versions t)
-(unless (file-exists-p "~/.emacs.d/backups")
-  (make-directory "~/.emacs.d/backups" t))
+;; Create temp directory for all Emacs temporary files
+(let ((temp-dir "/tmp/emacs-temp"))
+  (unless (file-exists-p temp-dir)
+    (make-directory temp-dir t))
+  
+  ;; Backup files configuration
+  (setq backup-directory-alist `(("." . ,(concat temp-dir "/backups")))
+        version-control t
+        kept-new-versions 5
+        kept-old-versions 2
+        delete-old-versions t)
+  
+  ;; Autosave files configuration
+  (setq auto-save-file-name-transforms
+        `((".*" ,(concat temp-dir "/autosave/") t)))
+  
+  ;; Lock files configuration
+  (setq lock-file-name-transforms
+        `((".*" ,(concat temp-dir "/lock/") t)))
+  
+  ;; Ensure subdirectories exist
+  (let ((backup-dir (concat temp-dir "/backups"))
+        (autosave-dir (concat temp-dir "/autosave"))
+        (lock-dir (concat temp-dir "/lock")))
+    (unless (file-exists-p backup-dir)
+      (make-directory backup-dir t))
+    (unless (file-exists-p autosave-dir)
+      (make-directory autosave-dir t))
+    (unless (file-exists-p lock-dir)
+      (make-directory lock-dir t))))
 
 (straight-use-package 'toc-org)
 (straight-use-package 'org-bullets)
