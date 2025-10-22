@@ -1,4 +1,5 @@
 # Emacs Temporary, Backup, and Lock Files
+# These are now stored in /tmp/emacs-temp/ so they won't appear in the repo
 # Autosave files (e.g., #filename#)
 \#*\#
 
@@ -10,6 +11,9 @@
 *~
 auto-save-list/
 backups/
+
+# Note: All temporary files are now redirected to /tmp/emacs-temp/
+# This includes backups, autosave, and lock files
 
 
 # Eshell Files
