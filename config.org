@@ -19,11 +19,15 @@
 - [[#gui-tweaks][GUI Tweaks]]
   - [[#menubar-toolbar--scrollbar][Menubar, Toolbar & Scrollbar]]
   - [[#line-numbering][Line Numbering]]
+- [[#buffer-move][Buffer-Move]]
 - [[#backup-strategy][Backup Strategy]]
 - [[#org-mode-enhancements][Org Mode Enhancements]]
   - [[#enable-toc--org-bullets][Enable TOC & Org Bullets]]
   - [[#org-tempo][Org Tempo]]
 - [[#sudo-edit][SUDO Edit]]
+- [[#shells--terminal][Shells & Terminal]]
+  - [[#vterm][Vterm]]
+  - [[#vterm-toggle][Vterm-Toggle]]
 - [[#which-key][Which-Key]]
 - [[#ivy-counsel][IVY (COUNSEL)]]
 - [[#all-the-icons][ALL THE ICONS]]
@@ -107,12 +111,17 @@
  "w v" '(split-window-right :which-key "Split vertical")
  "w s" '(split-window-below :which-key "Split horizontal")
  "w c" '(delete-window :which-key "Delete window")
+ "w n" '(evil-window-new :which-key "New window")
  "w o" '(delete-other-windows :which-key "Maximize window")
  "w j" '(evil-window-down :which-key "Move to window below")
  "w k" '(evil-window-up :which-key "Move to window above")
  "w h" '(evil-window-left :which-key "Move to window left")
  "w l" '(evil-window-right :which-key "Move to window right")
  "w w" '(other-window :which-key "Switch to other window")
+ "w H" '(buf-move-left :which-key "Buffer move left")
+ "w J" '(buf-move-down :which-key "Buffer move down")
+ "w K" '(buf-move-up :which-key "Buffer move up")
+ "w L" '(buf-move-right :which-key "Buffer move right")
 
  ;; Search
  "s" '(:ignore t :which-key "search")
@@ -140,6 +149,9 @@
  "t" '(:ignore t :which-key "Toggle")
  "t l" '(display-line-numbers-mode :which-key "Toggle line numbers")
  "t t" '(visual-line-mode :which-key "Toggle truncated lines")
+ "t e" '(eshell :which-key "Open eshell")
+ "t v" '(my/vterm :which-key "Open vterm")
+ "t T" '(my/vterm-toggle :which-key "Toggle vterm")
 
  ;; Applications
  "a" '(:ignore t :which-key "applications")
@@ -211,6 +223,11 @@
 ;; Line numbering is configured in Startup Services section
 #+END_SRC
 
+* Buffer-Move
+#+begin_src emacs-lisp
+  (straight-use-package 'buffer-move)
+  (require 'buffer-move)
+#+end_src
 * Backup Strategy
 #+BEGIN_SRC emacs-lisp
 (setq backup-directory-alist `(("." . "~/.emacs.d/backups"))
@@ -251,6 +268,124 @@
     "f P" '(sudo-edit :which-key "Sudo edit file")))
 #+END_SRC
 
+* Shells & Terminal
+** Eshell
+#+BEGIN_SRC emacs-lisp
+(straight-use-package 'eshell-syntax-highlighting)
+
+;; Eshell configuration
+(setq eshell-rc-script (concat user-emacs-directory "eshell/profile")
+      eshell-aliases-file (concat user-emacs-directory "eshell/aliases")
+      eshell-history-size 5000
+      eshell-buffer-maximum-lines 5000
+      eshell-hist-ignoredups t
+      eshell-scroll-to-bottom-on-input 'all
+      eshell-destroy-buffer-when-process-dies t
+      eshell-visual-commands '("bash" "fish" "htop" "ssh" "top" "zsh")
+      eshell-scroll-show-maximum-output t
+      eshell-buffer-maximum-lines 10000
+      eshell-prompt-regexp "^[^#$%>\n]*[#$%>] *"
+      eshell-highlight-prompt t
+      eshell-prompt-function
+      (lambda nil
+        (concat
+         (propertize (abbreviate-file-name (eshell/pwd)) 'face 'eshell-prompt)
+         (propertize " $ " 'face 'eshell-prompt))))
+
+;; Ensure eshell directories exist
+(let ((eshell-dir (concat user-emacs-directory "eshell")))
+  (unless (file-exists-p eshell-dir)
+    (make-directory eshell-dir t))
+  (unless (file-exists-p eshell-rc-script)
+    (write-region "# Eshell profile\n# This file is loaded when eshell starts\n\necho \"Welcome to Eshell!\"\n" nil eshell-rc-script))
+  (unless (file-exists-p eshell-aliases-file)
+    (write-region "# Eshell aliases\n# Add your custom aliases here\n\nalias ll 'ls -la'\nalias .. 'cd ..'\nalias c 'clear'\n" nil eshell-aliases-file)))
+
+;; Eshell syntax highlighting
+(with-eval-after-load 'esh-mode
+  (when (require 'eshell-syntax-highlighting nil t)
+    (eshell-syntax-highlighting-global-mode +1)))
+
+;; Eshell behavior improvements
+(setq eshell-scroll-to-bottom-on-input 'all
+      eshell-scroll-show-maximum-output t
+      eshell-buffer-maximum-lines 10000
+      eshell-prompt-regexp "^[^#$%>\n]*[#$%>] *"
+      eshell-highlight-prompt t)
+
+;; Eshell aliases and functions
+(defun eshell/clear ()
+  "Clear the eshell buffer."
+  (interactive)
+  (let ((inhibit-read-only t))
+    (erase-buffer)))
+
+;; Better eshell navigation
+(defun eshell-previous-prompt ()
+  "Go to previous prompt."
+  (interactive)
+  (eshell-bol)
+  (re-search-backward eshell-prompt-regexp nil t))
+
+(defun eshell-next-prompt ()
+  "Go to next prompt."
+  (interactive)
+  (re-search-forward eshell-prompt-regexp nil t))
+
+;; Keybindings for eshell
+(with-eval-after-load 'eshell
+  (define-key eshell-mode-map (kbd "C-c C-p") 'eshell-previous-prompt)
+  (define-key eshell-mode-map (kbd "C-c C-n") 'eshell-next-prompt)
+  (define-key eshell-mode-map (kbd "C-c C-l") 'eshell/clear))
+
+;; Global keybindings for eshell
+(global-set-key (kbd "C-c e") 'eshell)
+#+END_SRC
+
+** Vterm
+#+BEGIN_SRC emacs-lisp
+(straight-use-package 'vterm)
+
+;; Define vterm keybindings without loading the package
+(defun my/vterm ()
+  "Open vterm, compiling module if needed"
+  (interactive)
+  (when (require 'vterm nil t)
+    (vterm)))
+
+;; Vterm configuration (only when loaded)
+(with-eval-after-load 'vterm
+  (setq vterm-max-scrollback 10000)
+  (setq vterm-kill-buffer-on-exit t)
+  (define-key vterm-mode-map (kbd "C-c C-c") 'vterm-send-C-c)
+  (define-key vterm-mode-map (kbd "C-c C-j") 'vterm-send-C-j)
+  (define-key vterm-mode-map (kbd "C-c C-k") 'vterm-send-C-k)
+  (define-key vterm-mode-map (kbd "C-c C-l") 'vterm-send-C-l))
+#+END_SRC
+
+** Vterm-Toggle
+#+BEGIN_SRC emacs-lisp
+(straight-use-package 'vterm-toggle)
+
+;; Define vterm-toggle function without loading the package
+(defun my/vterm-toggle ()
+  "Toggle vterm, compiling module if needed"
+  (interactive)
+  (when (require 'vterm-toggle nil t)
+    (vterm-toggle)))
+
+;; Vterm-toggle configuration (only when loaded)
+(with-eval-after-load 'vterm-toggle
+  (setq vterm-toggle-fullscreen-p nil)
+  (setq vterm-toggle-scope 'project)
+  (add-to-list 'display-buffer-alist
+               '((lambda (buffer-or-name _)
+                   (let ((buffer (get-buffer buffer-or-name)))
+                     (with-current-buffer buffer
+                       (equal major-mode 'vterm-mode))))
+                 (display-buffer-reuse-window display-buffer-same-window)
+                 (reusable-frames . visible))))
+#+END_SRC
 * Which-Key
 #+BEGIN_SRC emacs-lisp
 (straight-use-package 'which-key)
@@ -305,6 +440,16 @@
 (global-set-key (kbd "C-x b") 'ivy-switch-buffer)
 (global-set-key (kbd "C-h f") 'counsel-describe-function)
 (global-set-key (kbd "C-h v") 'counsel-describe-variable)
+
+;; Additional buffer-move keybindings (Emacs wiki style)
+(global-set-key (kbd "<C-S-up>")     'buf-move-up)
+(global-set-key (kbd "<C-S-down>")   'buf-move-down)
+(global-set-key (kbd "<C-S-left>")   'buf-move-left)
+(global-set-key (kbd "<C-S-right>")  'buf-move-right)
+
+;; Global keybindings for vterm-toggle
+(global-set-key (kbd "C-c t") 'my/vterm-toggle)
+(global-set-key (kbd "C-c T") 'my/vterm-toggle)
 #+END_SRC
 
 * ALL THE ICONS
