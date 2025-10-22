@@ -20,11 +20,41 @@
 (setq evil-want-keybinding nil
       evil-want-integration t
       evil-split-window-right t
-      evil-split-window-below t)
+      evil-split-window-below t
+      evil-undo-system 'undo-redo)
 
 (straight-use-package 'evil)
 (require 'evil)
 (evil-mode 1)
+
+;; Add C-d, C-u, and C-r keybindings for Evil mode
+;; Note: C-u needs special handling due to Emacs universal argument
+(with-eval-after-load 'evil
+  ;; Scrolling keybindings
+  (define-key evil-normal-state-map (kbd "C-d") 'evil-scroll-down)
+  (define-key evil-visual-state-map (kbd "C-d") 'evil-scroll-down)
+  
+  (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
+  (define-key evil-visual-state-map (kbd "C-u") 'evil-scroll-up)
+  (define-key evil-insert-state-map (kbd "C-u") 'evil-scroll-up)
+  
+  ;; Redo keybinding - use undo-redo instead of evil-redo
+  (define-key evil-normal-state-map (kbd "C-r") 'undo-redo)
+  (define-key evil-visual-state-map (kbd "C-r") 'undo-redo)
+  (define-key evil-insert-state-map (kbd "C-r") 'undo-redo))
+
+;; Ensure keybindings work even after evil-collection loads
+(with-eval-after-load 'evil-collection
+  ;; Scrolling keybindings
+  (define-key evil-normal-state-map (kbd "C-d") 'evil-scroll-down)
+  (define-key evil-visual-state-map (kbd "C-d") 'evil-scroll-down)
+  (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
+  (define-key evil-visual-state-map (kbd "C-u") 'evil-scroll-up)
+  
+  ;; Redo keybinding - use undo-redo instead of evil-redo
+  (define-key evil-normal-state-map (kbd "C-r") 'undo-redo)
+  (define-key evil-visual-state-map (kbd "C-r") 'undo-redo)
+  (define-key evil-insert-state-map (kbd "C-r") 'undo-redo))
 
 (straight-use-package 'evil-collection)
 (with-eval-after-load 'evil
@@ -105,8 +135,8 @@
  "t l" '(display-line-numbers-mode :which-key "Toggle line numbers")
  "t t" '(visual-line-mode :which-key "Toggle truncated lines")
  "t e" '(eshell :which-key "Open eshell")
- "t v" '(my/vterm :which-key "Open vterm")
- "t T" '(my/vterm-toggle :which-key "Toggle vterm")
+ "t V" '(my/vterm :which-key "Open vterm")
+ "t v" '(my/vterm-toggle :which-key "Toggle vterm")
 
  ;; Applications
  "a" '(:ignore t :which-key "applications")
@@ -183,36 +213,13 @@
 (when (fboundp 'evil-window-vsplit)
   (advice-add 'evil-window-vsplit :around 'my/select-new-window))
 
-;; Create temp directory for all Emacs temporary files
-(let ((temp-dir "/tmp/emacs-temp"))
-  (unless (file-exists-p temp-dir)
-    (make-directory temp-dir t))
-  
-  ;; Backup files configuration
-  (setq backup-directory-alist `(("." . ,(concat temp-dir "/backups")))
-        version-control t
-        kept-new-versions 5
-        kept-old-versions 2
-        delete-old-versions t)
-  
-  ;; Autosave files configuration
-  (setq auto-save-file-name-transforms
-        `((".*" ,(concat temp-dir "/autosave/") t)))
-  
-  ;; Lock files configuration
-  (setq lock-file-name-transforms
-        `((".*" ,(concat temp-dir "/lock/") t)))
-  
-  ;; Ensure subdirectories exist
-  (let ((backup-dir (concat temp-dir "/backups"))
-        (autosave-dir (concat temp-dir "/autosave"))
-        (lock-dir (concat temp-dir "/lock")))
-    (unless (file-exists-p backup-dir)
-      (make-directory backup-dir t))
-    (unless (file-exists-p autosave-dir)
-      (make-directory autosave-dir t))
-    (unless (file-exists-p lock-dir)
-      (make-directory lock-dir t))))
+(setq backup-directory-alist `(("." . "~/.emacs.d/backups"))
+      version-control t
+      kept-new-versions 5
+      kept-old-versions 2
+      delete-old-versions t)
+(unless (file-exists-p "~/.emacs.d/backups")
+  (make-directory "~/.emacs.d/backups" t))
 
 (straight-use-package 'toc-org)
 (straight-use-package 'org-bullets)
