@@ -491,55 +491,59 @@
 (straight-use-package 'page-break-lines)
 (straight-use-package 'projectile)
 
-;; Ensure all-the-icons is loaded first
 (require 'all-the-icons)
-
-;; Configure projectile for projects
 (require 'projectile)
+
 (projectile-mode +1)
-(setq projectile-project-search-path '("~/workspaces/" "~/projects/" "~/code/" "~/"))
-(setq dashboard-projects-backend 'projectile)
+(setq projectile-project-search-path '("~/workspaces/" "~/projects/" "~/code/" "~/")
+      dashboard-projects-backend 'projectile)
 
-;; Dashboard configuration
 (setq dashboard-banner-logo-title "BKC's Emacs Dashboard"
-      dashboard-startup-banner (expand-file-name "img/logo.png" user-emacs-directory)  ; Use custom logo
-      dashboard-center-content t      ; Center content horizontally
-      dashboard-vertically-center-content t ; Vertically center content
-      dashboard-navigation-cycle t ; Enable cycle navigation between each section
-      dashboard-show-shortcuts nil    ; Disable shortcut indicators
-      dashboard-icon-type 'all-the-icons  ; Use all-the-icons
-      dashboard-set-heading-icons t  ; Add icons to headings
-      dashboard-set-file-icons t     ; Add icons to files
-      dashboard-items '((recents   . 5)
-                        (bookmarks . 5)
-                        (projects  . 5))
-      ;; Enable navigator
-      dashboard-set-navigator t)
+      dashboard-startup-banner (expand-file-name "img/logo.png" user-emacs-directory)
+      dashboard-center-content t
+      dashboard-vertically-center-content t
+      dashboard-navigation-cycle t
+      dashboard-show-shortcuts t
+      dashboard-use-navigator t
+      dashboard-icon-type 'all-the-icons
+      dashboard-set-heading-icons t
+      dashboard-set-file-icons t
+      dashboard-items '((recents . 5) (bookmarks . 5) (projects . 5))
+      dashboard-set-navigator t
+      dashboard-set-footer t
+      dashboard-footer-messages '("\"Powered by Bibit Kunwar Chhetri\"")
+      dashboard-footer-icon (all-the-icons-octicon "heart" :height 1.1 :v-adjust 0.0)
+      dashboard-footer-message-fn (lambda () (car dashboard-footer-messages)))
 
-;; Enable dashboard at startup
 (dashboard-setup-startup-hook)
+(setq initial-buffer-choice (lambda () (get-buffer-create dashboard-buffer-name)))
 
-;; Use custom footer with your name
-(setq dashboard-set-footer t
-      dashboard-footer-messages '("Powered by Bibit Kunwar Chhetri"))
+(defun my/dashboard-first-load-refresh ()
+  (when (string= (buffer-name) "*dashboard*")
+    (run-with-timer 0.5 nil 'dashboard-refresh-buffer)))
 
-;; Create custom function to add separators around dashboard items
+(defun my/dashboard-refresh-with-new-message ()
+  "Refresh dashboard with a new random footer message."
+  (dashboard-refresh-buffer))
+
+;; Remove automatic refresh on first load to prevent cursor jumping
+;; (add-hook 'dashboard-mode-hook 'my/dashboard-first-load-refresh)
+
+;; Dashboard keybindings (Evil mode handles navigation automatically)
+(with-eval-after-load 'dashboard
+  (define-key dashboard-mode-map (kbd "RET") 'dashboard-enter)
+  (define-key dashboard-mode-map (kbd "r") 'my/dashboard-refresh-with-new-message)
+  (define-key dashboard-mode-map (kbd "g") 'my/dashboard-refresh-with-new-message))
+
 (defun dashboard-insert-items-with-separators ()
-  "Insert dashboard items with separators around each section."
-  ;; Insert separator at the top - ensure full width
   (let ((width (frame-width)))
     (insert (propertize (make-string width ?─) 'face 'shadow))
     (dashboard-insert-newline))
-  
-  ;; Use the default dashboard items insertion (which handles headings with icons)
   (dashboard-insert-items)
-  
-  ;; Insert separator at the bottom - ensure full width
   (dashboard-insert-newline)
   (let ((width (frame-width)))
     (insert (propertize (make-string width ?─) 'face 'shadow))))
 
-;; Ensure navigator is included in dashboard layout with separators
 (setq dashboard-startupify-list '(dashboard-insert-banner
                                    dashboard-insert-newline
                                    dashboard-insert-banner-title
@@ -554,44 +558,32 @@
                                    dashboard-insert-newline
                                    dashboard-insert-footer))
 
-;; Configure for emacs daemon
-(setq initial-buffer-choice (lambda () (get-buffer-create dashboard-buffer-name)))
-
-;; Configure navigator buttons (horizontal layout)
 (setq dashboard-navigator-buttons
-      `(;; Single horizontal line
-        ((,(when (fboundp 'all-the-icons-octicon)
+      `(((,(when (fboundp 'all-the-icons-octicon)
              (all-the-icons-octicon "mark-github" :height 1.1 :v-adjust 0.0))
-          "Homepage"
-          "Browse homepage"
+          "Homepage" "Browse homepage"
           (lambda (&rest _) (browse-url "https://github.com/bibitchhetri")))
          ("★" "Blog" "Show stars" (lambda (&rest _) (browse-url "https://bibitkunwar.com.np")) warning)
          ("?" "" "?/h" #'show-help nil "<" ">")
          (,(when (fboundp 'all-the-icons-faicon)
              (all-the-icons-faicon "refresh" :height 1.1 :v-adjust 0.0))
-          "Refresh"
-          "Refresh dashboard"
+          "Refresh" "Refresh dashboard"
           (lambda (&rest _) (dashboard-refresh-buffer)))
          ("🔄" "Restart" "Restart Emacs" (lambda (&rest _) (restart-emacs)) error))))
 
-;; Ensure custom logo is loaded
 (with-eval-after-load 'dashboard
   (when (file-exists-p (expand-file-name "img/logo.png" user-emacs-directory))
     (setq dashboard-startup-banner (expand-file-name "img/logo.png" user-emacs-directory))))
 
-;; Enable page-break-lines globally for better separators
 (global-page-break-lines-mode)
 
-;; Add dashboard keybindings
 (my/leader-keys
   "d" '(:ignore t :which-key "dashboard")
   "d d" '(dashboard-open :which-key "Open dashboard")
-  "d r" '(dashboard-refresh-buffer :which-key "Refresh dashboard")
+  "d r" '(my/dashboard-refresh-with-new-message :which-key "Refresh dashboard")
   "d a" '(projectile-add-known-project :which-key "Add project"))
 
-;; Helper function to add common projects
 (defun my/add-common-projects ()
-  "Add common project directories to projectile."
   (interactive)
   (let ((common-projects '("~/.emacs.d" "~/.dotfiles" "~/workspaces" "~/projects" "~/code")))
     (dolist (project common-projects)
