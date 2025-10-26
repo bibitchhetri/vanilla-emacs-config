@@ -161,6 +161,7 @@
 
 (straight-use-package 'all-the-icons)
 (straight-use-package 'all-the-icons-dired)
+(straight-use-package 'nerd-icons)
 
 (with-eval-after-load 'dired
   (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
@@ -211,6 +212,72 @@
     (kbd "k") 'my/dired-prev-line-or-peep
     (kbd "C-d") 'dired-hide-details-toggle
     (kbd "q") 'peep-dired))
+
+(straight-use-package 'neotree)
+
+;; Neotree configuration
+(setq neo-theme 'nerd      ; Use nerd-icons for beautiful icons
+      neo-window-width 35
+      neo-smart-open t
+      neo-show-hidden-files t
+      neo-mode-line-type 'none
+      neo-auto-indent-point t
+      neo-show-updir-line t
+      neo-hidden-regexp-list '("^\\." "\\.pyc$" "~$" "\\.elc$" "\\.class$" "\\.jar$")
+      neo-create-file-auto-open t
+      neo-banner-message nil
+      neo-confirm-create-file 'off-p
+      neo-confirm-create-directory 'off-p
+      neo-window-fixed-size nil)
+
+;; Function to toggle neotree and focus it
+(defun my/neotree-toggle ()
+  "Toggle neotree and focus the window."
+  (interactive)
+  (neotree-toggle)
+  (when neo-global--window
+    (select-window neo-global--window)
+    (neotree-refresh)))
+
+;; Function to find file in current directory with neotree
+(defun my/neotree-find-file ()
+  "Find file in neotree in current buffer's directory."
+  (interactive)
+  (neotree-dir default-directory)
+  (when neo-global--window
+    (select-window neo-global--window)))
+
+;; Custom function to select neotree window properly
+(defun my/neotree-select-window ()
+  "Select neotree window if it exists."
+  (interactive)
+  (when neo-global--window
+    (select-window neo-global--window)))
+
+;; Neotree keybindings
+(with-eval-after-load 'neotree
+  (evil-define-key 'normal neotree-mode-map
+    (kbd "RET") 'neotree-enter
+    (kbd "TAB") 'neotree-stretch-toggle
+    (kbd "SPC") 'neotree-quick-look
+    (kbd "q") 'neotree-hide
+    (kbd "c") 'neotree-create-node
+    (kbd "d") 'neotree-delete-node
+    (kbd "r") 'neotree-rename-node
+    (kbd "R") 'neotree-refresh
+    (kbd "h") 'neo-buffer--hide-dotfiles-toggle
+    (kbd "H") 'neo-buffer--hide-gitignored-files-toggle
+    (kbd "g") 'neotree-refresh
+    (kbd "s") 'neotree-hidden-file-toggle
+    (kbd "U") 'neotree-select-up-node))
+
+;; Add neotree to leader keybindings
+(my/leader-keys
+  "n" '(:ignore t :which-key "neotree")
+  "n n" '(my/neotree-toggle :which-key "Toggle neotree")
+  "n f" '(my/neotree-find-file :which-key "Find file in neotree")
+  "n r" '(neotree-refresh :which-key "Refresh neotree")
+  "n w" '(my/neotree-select-window :which-key "Select neotree window"))
 
 (setq backup-directory-alist `(("." . "~/.emacs.d/backups"))
       version-control t
