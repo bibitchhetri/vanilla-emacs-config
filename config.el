@@ -413,11 +413,9 @@
 ;; Auto-format on save
 (setq eglot-autoshutdown t)
 
-;; Flycheck - on-the-fly syntax checking
 (straight-use-package 'flycheck)
 (straight-use-package 'diminish)
 
-;; Diminish flycheck and other minor modes to clean up modeline
 (require 'diminish)
 (diminish 'flycheck-mode)
 (diminish 'eldoc-mode)
@@ -431,16 +429,13 @@
 (diminish 'company-mode "Cmp")
 (diminish 'company-box-mode)
 
-;; Enable flycheck globally
 (global-flycheck-mode)
 
-;; Configure flycheck
 (setq flycheck-check-syntax-automatically '(save mode-enabled)
-      flycheck-checker 'python-pylint  ; Default checker
+      flycheck-checker 'python-pylint
       flycheck-command-wrapper-function
       (lambda (command) (append '("nice" "-n5") command)))
 
-;; Flycheck keybindings
 (my/leader-keys
   "c" '(:ignore t :which-key "check")
   "c c" '(flycheck-clear :which-key "Clear errors")
@@ -450,57 +445,40 @@
   "c v" '(flycheck-verify-setup :which-key "Verify setup")
   "c d" '(flycheck-disable-checker :which-key "Disable checker"))
 
-;; Enable flycheck for all supported modes
 (add-hook 'prog-mode-hook 'flycheck-mode)
 
-;; Show errors in the modeline
-(setq flycheck-indication-mode 'left-fringe)
-
-;; Better error display
-(setq flycheck-display-errors-function
+(setq flycheck-indication-mode 'left-fringe
+      flycheck-display-errors-function
       (lambda (errors)
         (let ((messages (mapcar #'flycheck-error-message errors)))
           (message "%s" (string-join messages "\n")))))
 
-;; Language-specific checker configuration
 (with-eval-after-load 'flycheck
-  ;; Python checkers
   (flycheck-add-next-checker 'python-flake8 'python-mypy)
   (setq flycheck-python-flake8-executable "flake8"
-        flycheck-python-mypy-executable "mypy")
-  
-  ;; JavaScript checkers
+        flycheck-python-mypy-executable "mypy"
+        flycheck-javascript-eslint-executable "eslint"
+        flycheck-javascript-jshint-executable "jshint"
+        flycheck-typescript-tsc-executable "tsc"
+        flycheck-rust-cargo-executable "cargo"
+        flycheck-rust-clippy-executable "clippy-driver"
+        flycheck-c++-gcc-executable "g++"
+        flycheck-c++-clang-executable "clang++"
+        flycheck-gcc-include-path nil)
   (add-to-list 'flycheck-checkers 'javascript-eslint)
   (add-to-list 'flycheck-checkers 'javascript-jshint)
-  (setq flycheck-javascript-eslint-executable "eslint"
-        flycheck-javascript-jshint-executable "jshint")
-  
-  ;; TypeScript checkers
   (add-to-list 'flycheck-checkers 'typescript-tsc)
-  (setq flycheck-typescript-tsc-executable "tsc")
-  
-  ;; Rust checkers
   (add-to-list 'flycheck-checkers 'rust-clippy)
   (add-to-list 'flycheck-checkers 'rust-cargo)
-  (setq flycheck-rust-cargo-executable "cargo"
-        flycheck-rust-clippy-executable "clippy-driver")
-  
-  ;; C/C++ checkers
   (add-to-list 'flycheck-checkers 'c-gcc)
   (add-to-list 'flycheck-checkers 'c++-gcc)
-  (add-to-list 'flycheck-checkers 'c++-clang)
-  (setq flycheck-gcc-include-path nil
-        flycheck-c++-gcc-executable "g++"
-        flycheck-c++-clang-executable "clang++"))
+  (add-to-list 'flycheck-checkers 'c++-clang))
 
-;; Company - powerful auto-completion framework
 (straight-use-package 'company)
 (straight-use-package 'company-box)
 
-;; Enable company globally
 (add-hook 'after-init-hook 'global-company-mode)
 
-;; Company configuration
 (setq company-minimum-prefix-length 2
       company-idle-delay 0.5
       company-selection-wrap-around t
@@ -510,17 +488,18 @@
       company-tooltip-align-annotations t
       company-require-match nil
       company-global-modes '(not eshell-mode shell-mode vterm-mode)
-      company-frontends '(company-pseudo-tooltip-frontend
-                         company-echo-metadata-frontend))
+      company-frontends '(company-pseudo-tooltip-frontend company-echo-metadata-frontend)
+      company-dabbrev-code-everywhere t
+      company-dabbrev-downcase nil
+      company-dabbrev-ignore-case t
+      company-dabbrev-other-buffers t)
 
-;; Enable company-box for better visual completion
 (when (require 'company-box nil t)
   (company-box-mode)
   (setq company-box-show-single-candidate t
         company-box-doc-enable t
         company-box-icons-unknown 'fa-question-circle))
 
-;; Company keybindings
 (with-eval-after-load 'company
   (define-key company-active-map (kbd "TAB") 'company-complete-common-or-cycle)
   (define-key company-active-map (kbd "<tab>") 'company-complete-common-or-cycle)
@@ -528,7 +507,6 @@
   (define-key company-active-map (kbd "<shift-tab>") 'company-select-previous)
   (define-key company-active-map (kbd "<backtab>") 'company-select-previous))
 
-;; Company keybindings in leader keys
 (my/leader-keys
   "o" '(:ignore t :which-key "completion")
   "o c" '(company-complete :which-key "Complete")
@@ -537,16 +515,6 @@
   "o m" '(company-manual-begin :which-key "Manual")
   "o r" '(company-abort :which-key "Abort"))
 
-;; Company backends configuration
-(setq company-dabbrev-code-everywhere t
-      company-dabbrev-downcase nil
-      company-dabbrev-ignore-case t
-      company-dabbrev-other-buffers t)
-
-;; Tree-sitter is the most efficient syntax highlighter in modern Emacs
-;; It provides fast, accurate parsing and highlighting
-
-;; Helper function to easily install tree-sitter grammars
 (defun my/install-tree-sitter-python ()
   "Install Python tree-sitter grammar."
   (interactive)
