@@ -416,18 +416,6 @@
   "z p" '(origami-previous-fold :which-key "Previous fold")
   "z t" '(my/origami-recursively-toggle-node :which-key "Recursively toggle fold"))
 
-(with-eval-after-load 'evil
-  (evil-define-key 'normal origami-mode-map
-    "za" 'origami-toggle-node
-    "zR" 'origami-open-all-nodes
-    "zM" 'origami-close-all-nodes
-    "zr" 'origami-open-node-recursively
-    "zm" 'origami-close-node-recursively
-    "zo" 'origami-show-only-node
-    "zz" 'my/origami-toggle-all
-    "zj" 'origami-next-fold
-    "zk" 'origami-previous-fold))
-
 (with-eval-after-load 'diminish
   (diminish 'origami-mode))
 #+END_SRC
@@ -1122,8 +1110,7 @@
 ;; Hide unnecessary items from which-key
 (setq which-key-allow-multiple-replacements t
       which-key-replacement-alist
-      '(("" . "\\` +")
-        (("which-key-command" . "\\` +") . nil)
+      '((("which-key-command" . "\\` +") . nil)
         (("which-key-show-next-page-cycle" . "\\` +") . nil)
         (("which-key-show-previous-page-cycle" . "\\` +") . nil)))
 
