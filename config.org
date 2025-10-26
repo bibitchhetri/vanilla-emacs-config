@@ -1,4 +1,4 @@
-#+TITLE: Vanilla Emacs Config
+ +TITL : Vanilla Emacs Config
 #+AUTHOR: Bibit Kunwar Chhetri
 #+PROPERTY: header-args :tangle yes :results silent :exports code
 #+STARTUP: overview indent hideblocks inlineimages entitiespretty
@@ -320,6 +320,11 @@
   (interactive)
   (when neo-global--window
     (select-window neo-global--window)))
+
+;; Disable line numbers in neotree
+(add-hook 'neotree-mode-hook
+          (lambda ()
+            (display-line-numbers-mode -1)))
 
 ;; Neotree keybindings
 (with-eval-after-load 'neotree

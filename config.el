@@ -254,6 +254,11 @@
   (when neo-global--window
     (select-window neo-global--window)))
 
+;; Disable line numbers in neotree
+(add-hook 'neotree-mode-hook
+          (lambda ()
+            (display-line-numbers-mode -1)))
+
 ;; Neotree keybindings
 (with-eval-after-load 'neotree
   (evil-define-key 'normal neotree-mode-map
