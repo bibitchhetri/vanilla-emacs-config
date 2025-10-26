@@ -48,3 +48,7 @@ var/
 # System and OS Files
 .DS_Store
 Thumbs.db
+
+
+*.eld
+bookmarks
