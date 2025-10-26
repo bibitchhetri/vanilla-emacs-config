@@ -87,6 +87,7 @@
  "f f" '(counsel-find-file :which-key "Find file")
  "f r" '(counsel-recentf :which-key "Recent files")
  "f d" '(counsel-dired :which-key "Open dired")
+ "f D" '(peep-dired :which-key "Peep dired preview")
  "f s" '(save-buffer :which-key "Save file")
  "f S" '(write-file :which-key "Save as")
  "f p" '(sudo-edit-find-file :which-key "Sudo find file")
@@ -163,6 +164,53 @@
 
 (with-eval-after-load 'dired
   (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
+
+(straight-use-package 'peep-dired)
+(straight-use-package 'dired-hacks)
+(straight-use-package 'dired-open)
+
+(setq dired-dwim-target t
+      dired-hide-details-hide-symlink-targets nil
+      dired-listing-switches "-alh"
+      dired-create-destination-dirs 'ask
+      dired-vc-rename-file t
+      dired-make-directory-clickable t
+      dired-auto-revert-buffer t
+      dired-vc-enable t)
+
+(require 'dired-open)
+(setq dired-open-extensions
+      '(("gif" . "open")
+        ("jpg" . "open")
+        ("png" . "open")
+        ("pdf" . "open")
+        ("zip" . "unzip")
+        ("gz" . "gunzip"))
+      dired-open-use-nohup t)
+
+(with-eval-after-load 'dired
+  (require 'peep-dired)
+  (setq dired-omit-extensions (delete "DS_Store" dired-omit-extensions))
+  
+  (defun my/dired-next-line-or-peep ()
+    (interactive)
+    (if peep-dired
+        (peep-dired-next-file)
+      (dired-next-line 1)))
+  
+  (defun my/dired-prev-line-or-peep ()
+    (interactive)
+    (if peep-dired
+        (peep-dired-prev-file)
+      (dired-previous-line 1)))
+  
+  (evil-define-key 'normal dired-mode-map
+    (kbd "h") 'dired-up-directory
+    (kbd "l") 'dired-find-file
+    (kbd "j") 'my/dired-next-line-or-peep
+    (kbd "k") 'my/dired-prev-line-or-peep
+    (kbd "C-d") 'dired-hide-details-toggle
+    (kbd "q") 'peep-dired))
 
 (setq backup-directory-alist `(("." . "~/.emacs.d/backups"))
       version-control t
