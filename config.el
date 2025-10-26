@@ -732,6 +732,30 @@
 ;; Enable tree-sitter for supported languages
 (add-hook 'prog-mode-hook 'my/prefer-tree-sitter-modes)
 
+(straight-use-package 'magit)
+
+;; Magit keybindings (using 'G' prefix to avoid conflict with window bindings)
+(my/leader-keys
+  "G" '(:ignore t :which-key "git")
+  "G s" '(magit-status :which-key "Status")
+  "G d" '(magit-diff :which-key "Diff")
+  "G l" '(magit-log :which-key "Log")
+  "G c" '(magit-commit :which-key "Commit")
+  "G p" '(magit-push :which-key "Push")
+  "G P" '(magit-pull :which-key "Pull")
+  "G b" '(magit-branch :which-key "Branch")
+  "G m" '(magit-merge :which-key "Merge")
+  "G r" '(magit-revert :which-key "Revert")
+  "G h" '(magit-checkout :which-key "Checkout"))
+
+;; Basic magit configuration
+(setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1
+      magit-diff-refine-hunk t
+      magit-save-repository-buffers 'dontask)
+
+;; Auto-refresh magit buffers
+(add-hook 'after-save-hook 'magit-after-save-refresh-status)
+
 (straight-use-package 'sudo-edit)
 (require 'sudo-edit)
 
