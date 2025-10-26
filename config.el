@@ -300,6 +300,59 @@
 (straight-use-package 'buffer-move)
 (require 'buffer-move)
 
+(straight-use-package 'origami)
+
+(defface origami-fold-header-face
+  '((t (:background unspecified :box nil)))
+  "Face used to display fold headers."
+  :group 'origami)
+
+(require 'origami)
+(add-hook 'prog-mode-hook 'origami-mode)
+
+(defun my/origami-toggle-all ()
+  "Toggle all folds in the current buffer."
+  (interactive)
+  (if (not (eq last-command 'my/origami-toggle-all))
+      (progn
+        (origami-close-all-nodes (current-buffer))
+        (setq this-command 'my/origami-toggle-all))
+    (origami-open-all-nodes (current-buffer))))
+
+(defun my/origami-recursively-toggle-node ()
+  "Recursively toggle the node at point."
+  (interactive)
+  (save-excursion
+    (origami-toggle-node (current-buffer) (point) t)))
+
+(my/leader-keys
+  "z" '(:ignore t :which-key "folding")
+  "z a" '(origami-toggle-node :which-key "Toggle fold")
+  "z R" '(origami-open-all-nodes :which-key "Open all folds")
+  "z M" '(origami-close-all-nodes :which-key "Close all folds")
+  "z r" '(origami-open-node-recursively :which-key "Open fold recursively")
+  "z m" '(origami-close-node-recursively :which-key "Close fold recursively")
+  "z o" '(origami-show-only-node :which-key "Show only this fold")
+  "z z" '(my/origami-toggle-all :which-key "Toggle all folds")
+  "z n" '(origami-next-fold :which-key "Next fold")
+  "z p" '(origami-previous-fold :which-key "Previous fold")
+  "z t" '(my/origami-recursively-toggle-node :which-key "Recursively toggle fold"))
+
+(with-eval-after-load 'evil
+  (evil-define-key 'normal origami-mode-map
+    "za" 'origami-toggle-node
+    "zR" 'origami-open-all-nodes
+    "zM" 'origami-close-all-nodes
+    "zr" 'origami-open-node-recursively
+    "zm" 'origami-close-node-recursively
+    "zo" 'origami-show-only-node
+    "zz" 'my/origami-toggle-all
+    "zj" 'origami-next-fold
+    "zk" 'origami-previous-fold))
+
+(with-eval-after-load 'diminish
+  (diminish 'origami-mode))
+
 (when (display-graphic-p)
   (let ((default-font (or (car (member "JetBrains Mono" (font-family-list)))
                           (car (member "SF Mono" (font-family-list))))))
