@@ -10,6 +10,11 @@
       enable-local-eval nil
       read-process-output-max (* 1024 1024)) ; 1MB
 
+;; Native compiler settings to reduce warnings
+(setq comp-async-report-warnings-errors 'error-only
+      comp-deferred-compilation t
+      comp-ctxt-optimization-level 0)
+
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name
@@ -65,80 +70,93 @@
   :global-prefix "M-SPC")
 
 (my/leader-keys
- ;; Buffer
- "b"  '(:ignore t :which-key "buffer")
+ ;; Buffer operations
+ "b" '(:ignore t :which-key "buffer")
  "b b" '(ivy-switch-buffer :which-key "Switch buffer")
- "b k" '(kill-this-buffer :which-key "Kill buffer")
+ "b k" '(kill-current-buffer :which-key "Kill buffer")
  "b n" '(next-buffer :which-key "Next buffer")
  "b p" '(previous-buffer :which-key "Previous buffer")
  "b r" '(revert-buffer :which-key "Reload buffer")
  "b B" '(ivy-switch-buffer-other-window :which-key "Switch buffer other window")
+ "b d" '(kill-current-buffer :which-key "Kill buffer")
+ "b o" '(other-window :which-key "Switch to other window")
+ "b s" '(save-buffer :which-key "Save buffer")
 
- ;; File
+ ;; File operations
  "f" '(:ignore t :which-key "file")
  "f f" '(counsel-find-file :which-key "Find file")
  "f r" '(counsel-recentf :which-key "Recent files")
  "f d" '(counsel-dired :which-key "Open dired")
+ "f s" '(save-buffer :which-key "Save file")
+ "f S" '(write-file :which-key "Save as")
  "f p" '(sudo-edit-find-file :which-key "Sudo find file")
  "f P" '(sudo-edit :which-key "Sudo edit file")
 
- ;; Help
- "h" '(:ignore t :which-key "Help")
- "h f" '(counsel-describe-function :which-key "Describe function")
- "h v" '(counsel-describe-variable :which-key "Describe variable")
- "h r r" '((lambda () (interactive)
-             (load-file "~/.emacs.d/init.el"))
-            :which-key "Reload emacs config")
+ ;; Project operations  
+ "p" '(:ignore t :which-key "project")
+ "p p" '(projectile-switch-project :which-key "Switch project")
+ "p f" '(projectile-find-file :which-key "Find file in project")
+ "p s" '(projectile-switch-project :which-key "Switch project")
+ "p t" '(projectile-toggle-between-implementation-and-test :which-key "Toggle impl/test")
 
  ;; Search
  "s" '(:ignore t :which-key "search")
  "s f" '(counsel-rg :which-key "Search in files")
  "s b" '(counsel-switch-buffer :which-key "Search buffers")
  "s m" '(counsel-imenu :which-key "Search in buffer")
- "s F" '(counsel-find-file :which-key "Find file fuzzy")
- "s R" '(counsel-recentf :which-key "Recent files")
+ "s w" '(swiper :which-key "Search in buffer (swiper)")
 
- ;; Evaluate
- "e" '(:ignore t :which-key "Eshell/Evaluate")    
- "e b" '(eval-buffer :which-key "Evaluate elisp in buffer")
- "e d" '(eval-defun :which-key "Evaluate defun containing or after point")
- "e e" '(eval-expression :which-key "Evaluate and elisp expression")
- "e h" '(counsel-esh-history :which-key "Eshell history")
- "e l" '(eval-last-sexp :which-key "Evaluate elisp expression before point")
- "e r" '(eval-region :which-key "Evaluate elisp in region")
- "e s" '(eshell :which-key "Eshell")
+ ;; Help
+ "h" '(:ignore t :which-key "help")
+ "h f" '(counsel-describe-function :which-key "Describe function")
+ "h v" '(counsel-describe-variable :which-key "Describe variable")
+ "h r" '((lambda () (interactive) (load-file "~/.emacs.d/init.el")) :which-key "Reload config")
+
+ ;; Evaluate/Elisp
+ "e" '(:ignore t :which-key "eval/elisp")
+ "e b" '(eval-buffer :which-key "Evaluate buffer")
+ "e d" '(eval-defun :which-key "Evaluate defun")
+ "e e" '(eval-expression :which-key "Evaluate expression")
+ "e r" '(eval-region :which-key "Evaluate region")
+ "e l" '(eval-last-sexp :which-key "Evaluate last sexp")
 
  ;; Toggle
- "t" '(:ignore t :which-key "Toggle")
+ "t" '(:ignore t :which-key "toggle")
  "t l" '(display-line-numbers-mode :which-key "Toggle line numbers")
- "t t" '(visual-line-mode :which-key "Toggle truncated lines")
+ "t t" '(visual-line-mode :which-key "Toggle visual line")
  "t e" '(eshell :which-key "Open eshell")
- "t V" '(my/vterm :which-key "Open vterm")
  "t v" '(my/vterm-toggle :which-key "Toggle vterm")
+ "t V" '(my/vterm :which-key "Open vterm")
  "t T" '(toggle-transparency :which-key "Toggle transparency")
 
  ;; Window
- "w"  '(:ignore t :which-key "window")
+ "w" '(:ignore t :which-key "window")
  "w v" '(split-window-right :which-key "Split vertical")
  "w s" '(split-window-below :which-key "Split horizontal")
- "w c" '(delete-window :which-key "Delete window")
- "w n" '(evil-window-new :which-key "New window")
+ "w c" '(delete-window :which-key "Close window")
  "w o" '(delete-other-windows :which-key "Maximize window")
- "w j" '(evil-window-down :which-key "Move to window below")
- "w k" '(evil-window-up :which-key "Move to window above")
- "w h" '(evil-window-left :which-key "Move to window left")
- "w l" '(evil-window-right :which-key "Move to window right")
- "w w" '(other-window :which-key "Switch to other window")
+ "w k" '(evil-window-up :which-key "Move up")
+ "w j" '(evil-window-down :which-key "Move down")
+ "w h" '(evil-window-left :which-key "Move left")
+ "w l" '(evil-window-right :which-key "Move right")
+ "w w" '(other-window :which-key "Switch window")
  "w H" '(buf-move-left :which-key "Buffer move left")
  "w J" '(buf-move-down :which-key "Buffer move down")
  "w K" '(buf-move-up :which-key "Buffer move up")
  "w L" '(buf-move-right :which-key "Buffer move right")
 
- ;; Applications
+ ;; Applications/Tools
  "a" '(:ignore t :which-key "applications")
  "a a" '(counsel-M-x :which-key "M-x")
  "a r" '(ivy-resume :which-key "Resume last search")
- "q q" '(save-buffers-kill-terminal :which-key "Quit Emacs"))
+
+ ;; Quit
+ "q" '(:ignore t :which-key "quit")
+ "q q" '(save-buffers-kill-terminal :which-key "Quit Emacs")
+ "q Q" '(kill-emacs :which-key "Kill Emacs")
+
+ ;; Quick access
+ "SPC" '(counsel-M-x :which-key "M-x"))
 
 (straight-use-package 'all-the-icons)
 (straight-use-package 'all-the-icons-dired)
@@ -329,12 +347,307 @@
 
 (require 'org-tempo)
 
+(straight-use-package 'eglot)
+
+;; Eglot configuration for efficient LSP support
+(require 'eglot)
+
+;; Connect to LSP servers for supported languages
+(add-hook 'prog-mode-hook
+          (lambda ()
+            (when (or (memq major-mode '(python-mode python-ts-mode))
+                      (memq major-mode '(rust-mode rust-ts-mode))
+                      (memq major-mode '(go-mode go-ts-mode))
+                      (memq major-mode '(c-mode c++-mode c++-ts-mode))
+                      (memq major-mode '(javascript-mode js-mode js-ts-mode typescript-mode typescript-ts-mode tsx-ts-mode))
+                      (memq major-mode '(java-mode java-ts-mode))
+                      (memq major-mode '(bash-mode sh-mode))
+                      (memq major-mode '(ruby-mode ruby-ts-mode))
+                      (memq major-mode '(php-mode)))
+              (eglot-ensure))))
+
+;; Better LSP settings
+(setq eglot-autoshutdown t
+      eglot-confirm-server-initiated-edits nil
+      eglot-extend-to-xref t
+      eglot-connect-timeout 60
+      eglot-ignored-server-capabilities '(:documentLinkProvider :documentFormattingProvider)
+      eglot-sync-connect 1)
+
+;; Performance optimization
+(setq eglot-events-buffer-size 0)
+
+;; Flymake configuration for better diagnostics
+(setq flymake-error-bitmap nil
+      flymake-note-bitmap nil
+      flymake-warning-bitmap nil
+      flymake-suppress-zero-counters nil)
+
+;; Keybindings for eglot/LSP
+(my/leader-keys
+  "l" '(:ignore t :which-key "lsp")
+  "l c" '(eglot-reconnect :which-key "Reconnect")
+  "l d" '(eglot-shutdown :which-key "Shutdown")
+  "l r" '(eglot-rename :which-key "Rename symbol")
+  "l f" '(eglot-format :which-key "Format")
+  "l a" '(eglot-code-action :which-key "Code action")
+  "l q" '(eglot-code-action-quickfix :which-key "Quick fix")
+  "l s" '(eglot-signature-help :which-key "Signature")
+  "l e" '(flymake-show-diagnostics :which-key "Diagnostics")
+  "l n" '(flymake-goto-next-error :which-key "Next error")
+  "l p" '(flymake-goto-prev-error :which-key "Previous error")
+  "l g" '(xref-find-definitions :which-key "Go to definition")
+  "l R" '(xref-find-references :which-key "Find references"))
+
+;; Better diagnostics display
+(add-hook 'eglot-managed-mode-hook
+          (lambda ()
+            (set-face-attribute 'eglot-highlight-symbol-face nil
+                                :background (face-attribute 'highlight :background)
+                                :foreground (face-attribute 'highlight :foreground))))
+
+;; Show eglot diagnostics in echo area
+(define-key eglot-mode-map [remap xref-find-definitions] 'eglot-find-declaration)
+(define-key eglot-mode-map [remap xref-find-references] 'eglot-find-references)
+
+;; Auto-format on save
+(setq eglot-autoshutdown t)
+
+;; Flycheck - on-the-fly syntax checking
+(straight-use-package 'flycheck)
+(straight-use-package 'diminish)
+
+;; Diminish flycheck and other minor modes to clean up modeline
+(require 'diminish)
+(diminish 'flycheck-mode)
+(diminish 'eldoc-mode)
+(diminish 'abbrev-mode)
+(diminish 'auto-revert-mode)
+(diminish 'ivy-mode "Ivy")
+(diminish 'ivy-rich-mode)
+(diminish 'counsel-mode)
+(diminish 'which-key-mode)
+(diminish 'org-indent-mode)
+(diminish 'company-mode "Cmp")
+(diminish 'company-box-mode)
+
+;; Enable flycheck globally
+(global-flycheck-mode)
+
+;; Configure flycheck
+(setq flycheck-check-syntax-automatically '(save mode-enabled)
+      flycheck-checker 'python-pylint  ; Default checker
+      flycheck-command-wrapper-function
+      (lambda (command) (append '("nice" "-n5") command)))
+
+;; Flycheck keybindings
+(my/leader-keys
+  "c" '(:ignore t :which-key "check")
+  "c c" '(flycheck-clear :which-key "Clear errors")
+  "c n" '(flycheck-next-error :which-key "Next error")
+  "c p" '(flycheck-previous-error :which-key "Previous error")
+  "c l" '(flycheck-list-errors :which-key "List errors")
+  "c v" '(flycheck-verify-setup :which-key "Verify setup")
+  "c d" '(flycheck-disable-checker :which-key "Disable checker"))
+
+;; Enable flycheck for all supported modes
+(add-hook 'prog-mode-hook 'flycheck-mode)
+
+;; Show errors in the modeline
+(setq flycheck-indication-mode 'left-fringe)
+
+;; Better error display
+(setq flycheck-display-errors-function
+      (lambda (errors)
+        (let ((messages (mapcar #'flycheck-error-message errors)))
+          (message "%s" (string-join messages "\n")))))
+
+;; Language-specific checker configuration
+(with-eval-after-load 'flycheck
+  ;; Python checkers
+  (flycheck-add-next-checker 'python-flake8 'python-mypy)
+  (setq flycheck-python-flake8-executable "flake8"
+        flycheck-python-mypy-executable "mypy")
+  
+  ;; JavaScript checkers
+  (add-to-list 'flycheck-checkers 'javascript-eslint)
+  (add-to-list 'flycheck-checkers 'javascript-jshint)
+  (setq flycheck-javascript-eslint-executable "eslint"
+        flycheck-javascript-jshint-executable "jshint")
+  
+  ;; TypeScript checkers
+  (add-to-list 'flycheck-checkers 'typescript-tsc)
+  (setq flycheck-typescript-tsc-executable "tsc")
+  
+  ;; Rust checkers
+  (add-to-list 'flycheck-checkers 'rust-clippy)
+  (add-to-list 'flycheck-checkers 'rust-cargo)
+  (setq flycheck-rust-cargo-executable "cargo"
+        flycheck-rust-clippy-executable "clippy-driver")
+  
+  ;; C/C++ checkers
+  (add-to-list 'flycheck-checkers 'c-gcc)
+  (add-to-list 'flycheck-checkers 'c++-gcc)
+  (add-to-list 'flycheck-checkers 'c++-clang)
+  (setq flycheck-gcc-include-path nil
+        flycheck-c++-gcc-executable "g++"
+        flycheck-c++-clang-executable "clang++"))
+
+;; Company - powerful auto-completion framework
+(straight-use-package 'company)
+(straight-use-package 'company-box)
+
+;; Enable company globally
+(add-hook 'after-init-hook 'global-company-mode)
+
+;; Company configuration
+(setq company-minimum-prefix-length 2
+      company-idle-delay 0.5
+      company-selection-wrap-around t
+      company-show-numbers t
+      company-tooltip-minimum-width 80
+      company-tooltip-limit 20
+      company-tooltip-align-annotations t
+      company-require-match nil
+      company-global-modes '(not eshell-mode shell-mode vterm-mode)
+      company-frontends '(company-pseudo-tooltip-frontend
+                         company-echo-metadata-frontend))
+
+;; Enable company-box for better visual completion
+(when (require 'company-box nil t)
+  (company-box-mode)
+  (setq company-box-show-single-candidate t
+        company-box-doc-enable t
+        company-box-icons-unknown 'fa-question-circle))
+
+;; Company keybindings
+(with-eval-after-load 'company
+  (define-key company-active-map (kbd "TAB") 'company-complete-common-or-cycle)
+  (define-key company-active-map (kbd "<tab>") 'company-complete-common-or-cycle)
+  (define-key company-active-map (kbd "S-TAB") 'company-select-previous)
+  (define-key company-active-map (kbd "<shift-tab>") 'company-select-previous)
+  (define-key company-active-map (kbd "<backtab>") 'company-select-previous))
+
+;; Company keybindings in leader keys
+(my/leader-keys
+  "o" '(:ignore t :which-key "completion")
+  "o c" '(company-complete :which-key "Complete")
+  "o h" '(company-show-doc-buffer :which-key "Show docs")
+  "o i" '(company-yasnippet :which-key "Snippet")
+  "o m" '(company-manual-begin :which-key "Manual")
+  "o r" '(company-abort :which-key "Abort"))
+
+;; Company backends configuration
+(setq company-dabbrev-code-everywhere t
+      company-dabbrev-downcase nil
+      company-dabbrev-ignore-case t
+      company-dabbrev-other-buffers t)
+
+;; Tree-sitter is the most efficient syntax highlighter in modern Emacs
+;; It provides fast, accurate parsing and highlighting
+
+;; Helper function to easily install tree-sitter grammars
+(defun my/install-tree-sitter-python ()
+  "Install Python tree-sitter grammar."
+  (interactive)
+  (when (treesit-available-p)
+    (message "Installing Python tree-sitter grammar...")
+    (call-interactively 'treesit-install-language-grammar)
+    (message "Python grammar installation complete!")))
+
+;; To enable Python syntax highlighting, run:
+;; M-x my/install-tree-sitter-python RET python RET
+
+;; Helper to check if a grammar is available
+(defun my/treesit-grammar-available-p (lang)
+  "Check if tree-sitter grammar for LANG is available."
+  (when (and (fboundp 'treesit-available-p) (treesit-available-p))
+    (let ((mode-name (intern (format "%s-ts-mode" lang))))
+      (require mode-name nil t))))
+
+;; NOTE: Tree-sitter mode remapping is disabled until grammars are installed
+;; To enable tree-sitter syntax highlighting:
+;; 1. Run: M-x treesit-install-language-grammar RET python RET
+;; 2. Wait for installation to complete
+;; 3. Restart Emacs
+;; 4. Uncomment the remapping below when ready
+
+;; Prefer tree-sitter modes when grammars are installed (Emacs 29+)
+;; (when (fboundp 'treesit-available-p)
+;;   (setq major-mode-remap-alist
+;;         '((bash-mode       . bash-ts-mode)
+;;           (c-mode          . c-ts-mode)
+;;           (c++-mode        . c++-ts-mode)
+;;           (css-mode        . css-ts-mode)
+;;           (dockerfile-mode . dockerfile-ts-mode)
+;;           (go-mode         . go-ts-mode)
+;;           (html-mode       . html-ts-mode)
+;;           (java-mode       . java-ts-mode)
+;;           (javascript-mode . js-ts-mode)
+;;           (json-mode       . json-ts-mode)
+;;           (python-mode     . python-ts-mode)
+;;           (rust-mode       . rust-ts-mode)
+;;           (sh-mode         . bash-ts-mode)
+;;           (typescript-mode . typescript-ts-mode)
+;;           (yaml-mode       . yaml-ts-mode))))
+
+;; Tree-sitter specific settings for optimal performance
+(when (fboundp 'treesit-font-lock-recompute-features)
+  ;; Enable query-based syntax highlighting for better performance
+  (setq treesit-font-lock-level 4)
+  (setq treesit-font-lock-feature-list
+        '((comment definition)
+          (keyword string)
+          (function type constant)
+          (assignment builtin operator property))))
+
+;; Automatically use tree-sitter where available
+(defun my/prefer-tree-sitter-modes ()
+  "Automatically use tree-sitter based modes when available."
+  (when (and (fboundp 'treesit-available-p) (treesit-available-p))
+    (when (eq major-mode 'python-mode)
+      (condition-case nil
+          (when (treesit-language-available-p "python")
+            (python-ts-mode))
+        (error nil)))
+    (when (eq major-mode 'javascript-mode)
+      (condition-case nil
+          (when (treesit-language-available-p "javascript")
+            (js-ts-mode))
+        (error nil)))
+    (when (eq major-mode 'typescript-mode)
+      (condition-case nil
+          (when (treesit-language-available-p "typescript")
+            (typescript-ts-mode))
+        (error nil)))
+    (when (eq major-mode 'go-mode)
+      (condition-case nil
+          (when (treesit-language-available-p "go")
+            (go-ts-mode))
+        (error nil)))
+    (when (eq major-mode 'rust-mode)
+      (condition-case nil
+          (when (treesit-language-available-p "rust")
+            (rust-ts-mode))
+        (error nil)))
+    (when (eq major-mode 'json-mode)
+      (condition-case nil
+          (when (treesit-language-available-p "json")
+            (json-ts-mode))
+        (error nil)))
+    (when (eq major-mode 'yaml-mode)
+      (condition-case nil
+          (when (treesit-language-available-p "yaml")
+            (yaml-ts-mode))
+        (error nil)))))
+
+;; Enable tree-sitter for supported languages
+(add-hook 'prog-mode-hook 'my/prefer-tree-sitter-modes)
+
 (straight-use-package 'sudo-edit)
 (require 'sudo-edit)
 
-(my/leader-keys
-  "f p" '(sudo-edit-find-file :which-key "Sudo find file")
-  "f P" '(sudo-edit :which-key "Sudo edit file"))
+;; Keybindings for sudo-edit are defined in the main leader-keys section above
 
 (straight-use-package 'eshell-syntax-highlighting)
 
@@ -466,15 +779,16 @@
 (doom-themes-org-config)
 
 (defun toggle-transparency ()
-  "Toggle transparency between 100 and 90%."
+  "Toggle transparency between 100% and 85%."
   (interactive)
   (let ((alpha (frame-parameter nil 'alpha)))
     (set-frame-parameter nil 'alpha
-                         (if (equal alpha '(100 . 100))
-                             '(90 . 90)
-                           '(100 . 100)))))
+                         (if (equal alpha '(85 . 85))
+                             '(100 . 100)
+                           '(85 . 85)))))
 
-(set-frame-parameter (selected-frame) 'alpha '(100 . 100))
+;; Enable transparency by default
+(set-frame-parameter (selected-frame) 'alpha '(85 . 85))
 
 (windmove-default-keybindings)
 
@@ -484,7 +798,29 @@
 
 (straight-use-package 'which-key)
 (require 'which-key)
-(setq which-key-idle-delay 0.3)
+
+;; Configure which-key
+(setq which-key-idle-delay 0.3
+      which-key-show-transient-maps t
+      which-key-sort-order 'which-key-key-order-alpha
+      which-key-popup-type 'side-window
+      which-key-side-window-location 'bottom
+      which-key-side-window-max-width 0.33
+      which-key-side-window-max-height 0.25
+      which-key-max-description-length 50
+      which-key-separator " → "
+      which-key-prefix-prefix "+"
+      which-key-enable-extended-meanings nil
+      which-key-show-major-mode nil)
+
+;; Hide unnecessary items from which-key
+(setq which-key-allow-multiple-replacements t
+      which-key-replacement-alist
+      '(("" . "\\` +")
+        (("which-key-command" . "\\` +") . nil)
+        (("which-key-show-next-page-cycle" . "\\` +") . nil)
+        (("which-key-show-previous-page-cycle" . "\\` +") . nil)))
+
 (which-key-mode)
 
 (straight-use-package 'dashboard)
