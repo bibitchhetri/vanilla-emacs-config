@@ -412,16 +412,22 @@
 * Fonts
 ** Font Face
 #+BEGIN_SRC emacs-lisp
+;; Configure primary font for coding
 (when (display-graphic-p)
   (let ((default-font (or (car (member "JetBrains Mono" (font-family-list)))
-                          (car (member "SF Mono" (font-family-list))))))
+                          (car (member "SF Mono" (font-family-list)))
+                          (car (member "Fira Code" (font-family-list)))
+                          (car (member "Menlo" (font-family-list)))
+                          (car (member "Monaco" (font-family-list))))))
     (when default-font
       (set-face-attribute 'default nil :font default-font :height 110 :weight 'medium)
       (add-to-list 'default-frame-alist `(font . ,(concat default-font "-11"))))))
 
+;; Configure variable pitch font for prose
 (when (and (display-graphic-p) (member "Ubuntu" (font-family-list)))
   (set-face-attribute 'variable-pitch nil :font "Ubuntu" :height 120 :weight 'medium))
 
+;; Configure terminal font
 (when (display-graphic-p)
   (let ((terminal-font (or (car (member "JetBrains Mono" (font-family-list)))
                           (car (member "SF Mono" (font-family-list)))
@@ -431,9 +437,60 @@
         (when (facep 'vterm)
           (set-face-attribute 'vterm nil :font terminal-font :height 110))))))
 
+;; Enable italics for code elements (compatible with doom themes)
 (set-face-attribute 'font-lock-comment-face nil :slant 'italic)
 (set-face-attribute 'font-lock-keyword-face nil :slant 'italic)
+
+;; Enhanced font styling for better code readability
+(with-eval-after-load 'font-lock
+  ;; Italics for specific syntax elements
+  (set-face-attribute 'font-lock-type-face nil :slant 'italic)
+  (set-face-attribute 'font-lock-builtin-face nil :slant 'italic)
+  (set-face-attribute 'font-lock-constant-face nil :weight 'bold)
+  (set-face-attribute 'font-lock-function-name-face nil :weight 'bold)
+  (set-face-attribute 'font-lock-variable-name-face nil :slant 'italic))
+
+;; Org mode specific font styling
+(with-eval-after-load 'org
+  (set-face-attribute 'org-document-title nil :height 1.2 :weight 'bold)
+  (set-face-attribute 'org-level-1 nil :height 1.15 :weight 'bold)
+  (set-face-attribute 'org-level-2 nil :height 1.10 :weight 'bold)
+  (set-face-attribute 'org-level-3 nil :height 1.05 :weight 'bold)
+  (set-face-attribute 'org-code nil :family "JetBrains Mono" :slant 'normal)
+  (set-face-attribute 'org-verbatim nil :family "JetBrains Mono" :slant 'normal)
+  ;; Italics for org emphasis
+  (set-face-attribute 'org-italic nil :slant 'italic)
+  (set-face-attribute 'org-bold nil :weight 'bold))
+
+;; Markdown mode font styling
+(with-eval-after-load 'markdown-mode
+  (set-face-attribute 'markdown-code-face nil :family "JetBrains Mono")
+  (set-face-attribute 'markdown-inline-code-face nil :family "JetBrains Mono"))
+
+;; Setup italics support for doom themes
+;; This ensures italics display correctly with doom themes
+(with-eval-after-load 'doom-themes
+  ;; Additional italic faces for better theme integration
+  (dolist (face '(font-lock-comment-face
+                  font-lock-keyword-face
+                  font-lock-type-face
+                  font-lock-builtin-face
+                  font-lock-variable-name-face
+                  org-italic))
+    (when (facep face)
+      (set-face-attribute face nil :slant 'italic))))
+
+;; Configure line spacing for better readability
 (setq-default line-spacing 0.12)
+
+;; Buffer-local line spacing for specific modes
+(add-hook 'prog-mode-hook
+          (lambda ()
+            (setq-local line-spacing 0.12)))
+
+(add-hook 'org-mode-hook
+          (lambda ()
+            (setq-local line-spacing 0.15)))
 #+END_SRC
 
 ** Zoom In/Out
