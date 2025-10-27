@@ -22,7 +22,7 @@
   (unless (file-exists-p bootstrap-file)
     (with-current-buffer
         (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+	 "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
          'silent 'inhibit-cookies)
       (goto-char (point-max))
       (eval-print-last-sexp)))
@@ -376,9 +376,11 @@
   (set-face-attribute 'org-level-3 nil :height 1.05 :weight 'bold)
   (set-face-attribute 'org-code nil :family "JetBrains Mono" :slant 'normal)
   (set-face-attribute 'org-verbatim nil :family "JetBrains Mono" :slant 'normal)
-  ;; Italics for org emphasis
-  (set-face-attribute 'org-italic nil :slant 'italic)
-  (set-face-attribute 'org-bold nil :weight 'bold))
+  ;; Italics for org emphasis (only if faces exist)
+  (when (facep 'org-italic)
+    (set-face-attribute 'org-italic nil :slant 'italic))
+  (when (facep 'org-bold)
+    (set-face-attribute 'org-bold nil :weight 'bold)))
 
 ;; Markdown mode font styling
 (with-eval-after-load 'markdown-mode
@@ -393,8 +395,7 @@
                   font-lock-keyword-face
                   font-lock-type-face
                   font-lock-builtin-face
-                  font-lock-variable-name-face
-                  org-italic))
+                  font-lock-variable-name-face))
     (when (facep face)
       (set-face-attribute face nil :slant 'italic))))
 

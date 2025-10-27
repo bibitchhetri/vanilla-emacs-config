@@ -44,6 +44,7 @@
 - [[#window-focus-enhancement][Window Focus Enhancement]]
 - [[#which-key][Which-Key]]
 - [[#dashboard][Dashboard]]
+- [[#mini-buffer-centered-box][Mini-Buffer Centered Box]]
 - [[#startup-completion-message][Startup Completion Message]]
 
 * Startup Essentials
@@ -66,25 +67,25 @@
 
 ** Package Manager (straight.el)
 #+BEGIN_SRC emacs-lisp
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name
-        "straight/repos/straight.el/bootstrap.el"
-        (or (bound-and-true-p straight-base-dir)
-            user-emacs-directory)))
-      (bootstrap-version 7))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
+  (defvar bootstrap-version)
+  (let ((bootstrap-file
+         (expand-file-name
+          "straight/repos/straight.el/bootstrap.el"
+          (or (bound-and-true-p straight-base-dir)
+              user-emacs-directory)))
+        (bootstrap-version 7))
+    (unless (file-exists-p bootstrap-file)
+      (with-current-buffer
+          (url-retrieve-synchronously
+  	 "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+           'silent 'inhibit-cookies)
+        (goto-char (point-max))
+        (eval-print-last-sexp)))
+    (load bootstrap-file nil 'nomessage))
 
-(straight-use-package 'use-package)
-(setq straight-use-package-by-default t
-      straight-check-for-modifications '(find-when-checking))
+  (straight-use-package 'use-package)
+  (setq straight-use-package-by-default t
+        straight-check-for-modifications '(find-when-checking))
 #+END_SRC
 
 ** Evil Mode (Vim Emulation)
@@ -458,9 +459,11 @@
   (set-face-attribute 'org-level-3 nil :height 1.05 :weight 'bold)
   (set-face-attribute 'org-code nil :family "JetBrains Mono" :slant 'normal)
   (set-face-attribute 'org-verbatim nil :family "JetBrains Mono" :slant 'normal)
-  ;; Italics for org emphasis
-  (set-face-attribute 'org-italic nil :slant 'italic)
-  (set-face-attribute 'org-bold nil :weight 'bold))
+  ;; Italics for org emphasis (only if faces exist)
+  (when (facep 'org-italic)
+    (set-face-attribute 'org-italic nil :slant 'italic))
+  (when (facep 'org-bold)
+    (set-face-attribute 'org-bold nil :weight 'bold)))
 
 ;; Markdown mode font styling
 (with-eval-after-load 'markdown-mode
@@ -475,8 +478,7 @@
                   font-lock-keyword-face
                   font-lock-type-face
                   font-lock-builtin-face
-                  font-lock-variable-name-face
-                  org-italic))
+                  font-lock-variable-name-face))
     (when (facep face)
       (set-face-attribute face nil :slant 'italic))))
 
