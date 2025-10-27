@@ -1061,17 +1061,18 @@
     (setq ivy-posframe-parameters
           (append
            '((left-fringe . 8)
-             (right-fringe . 8))
+             (right-fringe . 8)
+             (child-frame-border-width . 4))
            (if current-alpha
                `((alpha . ,(max (car current-alpha) 90)))
              '((alpha . 90)))
            (when (eq system-type 'darwin)
-             '((undecorated-round . t))))))
+             '((undecorated-round . t)
+               (child-frame-border-width . 4)))))
   
-  ;; Add distinct visible borders
-  (setq ivy-posframe-border-width 3
-        ivy-posframe-internal-border-width 2)
-    
+  ;; Add distinct visible borders with padding
+  (setq ivy-posframe-border-width 4
+        ivy-posframe-internal-border-width 3)
   
   ;; Position at center of screen
   (setq ivy-posframe-display-at-frame-center t)
@@ -1102,7 +1103,9 @@
                                        "#0984e3"))) ; darker blue for light theme
                   (set-face-attribute 'ivy-posframe-border nil
                                       :background border-color
-                                      :foreground border-color))
+                                      :foreground border-color
+                                      :box t
+                                      :box-color border-color))
               (error nil)))
         (error nil))))
   
@@ -1140,12 +1143,14 @@
     (setq which-key-posframe-parameters
           (append
            '((left-fringe . 8)
-             (right-fringe . 8))
+             (right-fringe . 8)
+             (child-frame-border-width . 4))
            (if current-alpha
                `((alpha . ,(max (car current-alpha) 90)))
              '((alpha . 90)))
            (when (eq system-type 'darwin)
-             '((undecorated-round . t))))))
+             '((undecorated-round . t)
+               (child-frame-border-width . 4)))))
   
   ;; Position at center of screen
   (setq which-key-posframe-poshandler #'posframe-poshandler-frame-center)
@@ -1154,8 +1159,8 @@
   (setq which-key-posframe-width 0.40
         which-key-posframe-height 0.35)
   
-  ;; Set distinct visible border
-  (setq which-key-posframe-border-width 3)
+  ;; Set distinct visible border with enhanced styling
+  (setq which-key-posframe-border-width 4)
   
   ;; Show major mode in header
   (setq which-key-show-major-mode t
@@ -1185,7 +1190,9 @@
                                        "#0984e3"))) ; darker blue for light theme
                   (set-face-attribute 'which-key-posframe-border nil
                                       :background border-color
-                                      :foreground border-color))
+                                      :foreground border-color
+                                      :box t
+                                      :box-color border-color))
               (error nil)))
         (error nil))))
   
@@ -1207,7 +1214,7 @@
   
   ;; Add to leader keys
   (my/leader-keys
-    "m k" '(my/toggle-which-key-frame :which-key "Toggle centered which-key")))
+    "m k" '(my/toggle-which-key-frame :which-key "Toggle centered which-key")))))
 
 ;; Ensure ivy-posframe is enabled at startup
 (add-hook 'emacs-startup-hook
