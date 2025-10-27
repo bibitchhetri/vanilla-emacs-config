@@ -583,7 +583,7 @@
 #+BEGIN_SRC emacs-lisp
 (straight-use-package 'eglot)
 
-k; Eglot configuration for efficient LSP support
+;; Eglot configuration for efficient LSP support
 (require 'eglot)
 
 ;; Connect to LSP servers for supported languages
@@ -1181,10 +1181,176 @@ k; Eglot configuration for efficient LSP support
         (projectile-add-known-project project)))))
 #+END_SRC
 
+* Mini-Buffer Centered Box
+#+BEGIN_SRC emacs-lisp
+;; Configure mini-buffer to appear as a centered child frame with border
+;; Using ivy-posframe for centered Ivy prompts
+
+;; Install ivy-posframe if needed
+(straight-use-package 'ivy-posframe)
+
+;; Configure centered mini-buffer with borders
+(when (require 'ivy-posframe nil t)
+  ;; Enable ivy-posframe by default
+  (setq ivy-posframe-mode t)
+  
+  ;; Configure the appearance of the centered frame
+  ;; Get the current frame's alpha value to sync transparency
+  (let ((current-alpha (frame-parameter nil 'alpha)))
+    (setq ivy-posframe-parameters
+          (append
+           '((left-fringe . 8)
+             (right-fringe . 8))
+           (if current-alpha
+               `((alpha . ,(max (car current-alpha) 90)))
+             '((alpha . 90)))
+           (when (eq system-type 'darwin)
+             '((undecorated-round . t))))))
+  
+  ;; Add distinct visible borders
+  (setq ivy-posframe-border-width 3
+        ivy-posframe-internal-border-width 2)
+    
+  
+  ;; Position at center of screen
+  (setq ivy-posframe-display-at-frame-center t)
+  
+  ;; Show numbers in candidates
+  (setq ivy-posframe-show-numbers t)
+  
+  ;; Customize the frame appearance - make it appropriately sized and centered
+  (setq ivy-posframe-width 90
+        ivy-posframe-min-width 70
+        ivy-posframe-height 20
+        ivy-posframe-min-height 10)
+  
+  ;; Configure faces after theme loads
+  (defun my/setup-ivy-posframe-faces ()
+    "Setup ivy-posframe faces safely after theme loads with distinct borders."
+    (when (require 'ivy-posframe nil t)
+      (condition-case nil
+          (progn
+            ;; Ensure ivy-posframe mode is enabled
+            (ivy-posframe-mode 1)
+            ;; Just inherit from default - theme will handle colors
+            (set-face-attribute 'ivy-posframe nil :inherit 'default)
+            ;; Make border stand out with a distinct blue color
+            (condition-case nil
+                (let ((border-color (if (eq (frame-parameter nil 'background-mode) 'dark)
+                                         "#74b9ff"  ; bright blue for dark theme
+                                       "#0984e3"))) ; darker blue for light theme
+                  (set-face-attribute 'ivy-posframe-border nil
+                                      :background border-color
+                                      :foreground border-color))
+              (error nil)))
+        (error nil))))
+  
+  ;; Set up faces after UI is ready
+  (run-with-idle-timer 0.5 nil #'my/setup-ivy-posframe-faces)
+  (add-hook 'window-setup-hook #'my/setup-ivy-posframe-faces)
+  
+  ;; Custom function to toggle
+  (defun my/toggle-mini-frame ()
+    "Toggle centered mini-buffer frame."
+    (interactive)
+    (if ivy-posframe-mode
+        (progn
+          (ivy-posframe-mode -1)
+          (message "Centered mini-frame disabled"))
+      (progn
+        (ivy-posframe-mode 1)
+        (message "Centered mini-frame enabled"))))
+  
+  ;; Add to leader keys
+  (my/leader-keys
+    "m" '(:ignore t :which-key "mini-frame")
+    "m m" '(my/toggle-mini-frame :which-key "Toggle centered mini-frame")))
+
+;; Configure which-key to also use centered posframe
+(straight-use-package 'which-key-posframe)
+
+(when (require 'which-key-posframe nil t)
+  ;; Enable which-key-posframe by default
+  (which-key-posframe-mode t)
+  
+  ;; Configure the posframe appearance
+  ;; Get the current frame's alpha value to sync transparency
+  (let ((current-alpha (frame-parameter nil 'alpha)))
+    (setq which-key-posframe-parameters
+          (append
+           '((left-fringe . 8)
+             (right-fringe . 8))
+           (if current-alpha
+               `((alpha . ,(max (car current-alpha) 90)))
+             '((alpha . 90)))
+           (when (eq system-type 'darwin)
+             '((undecorated-round . t))))))
+  
+  ;; Position at center of screen
+  (setq which-key-posframe-poshandler #'posframe-poshandler-frame-center)
+  
+  ;; Set size - make it larger for better visibility
+  (setq which-key-posframe-width 0.40
+        which-key-posframe-height 0.35)
+  
+  ;; Set distinct visible border
+  (setq which-key-posframe-border-width 3)
+  
+  ;; Show major mode in header
+  (setq which-key-show-major-mode t)
+  
+  ;; Auto-hide after selection
+  (setq which-key-posframe-hide-dead-keys t)
+  
+  ;; Configure faces after theme loads
+  (defun my/setup-which-key-posframe-faces ()
+    "Setup which-key-posframe faces safely after theme loads with distinct borders."
+    (when (require 'which-key-posframe nil t)
+      (condition-case nil
+          (progn
+            ;; Just inherit from default - theme will handle colors
+            (set-face-attribute 'which-key-posframe nil :inherit 'default)
+            ;; Make border stand out with a distinct color (different from ivy)
+            (condition-case nil
+                (let ((border-color (if (eq (frame-parameter nil 'background-mode) 'dark)
+                                         "#74b9ff"  ; bright blue for dark theme
+                                       "#0984e3"))) ; darker blue for light theme
+                  (set-face-attribute 'which-key-posframe-border nil
+                                      :background border-color
+                                      :foreground border-color))
+              (error nil)))
+        (error nil))))
+  
+  ;; Set up faces after UI is ready
+  (run-with-idle-timer 0.5 nil #'my/setup-which-key-posframe-faces)
+  (add-hook 'window-setup-hook #'my/setup-which-key-posframe-faces)
+  
+  ;; Function to toggle which-key posframe
+  (defun my/toggle-which-key-frame ()
+    "Toggle centered which-key frame."
+    (interactive)
+    (if which-key-posframe-mode
+        (progn
+          (which-key-posframe-mode -1)
+          (message "Centered which-key disabled"))
+      (progn
+        (which-key-posframe-mode 1)
+        (message "Centered which-key enabled"))))
+  
+  ;; Add to leader keys
+  (my/leader-keys
+    "m k" '(my/toggle-which-key-frame :which-key "Toggle centered which-key")))
+#+END_SRC
+
 * Startup Completion Message
 #+BEGIN_SRC emacs-lisp
+;; Ensure ivy-posframe is enabled at startup
 (add-hook 'emacs-startup-hook
           (lambda ()
+            (when (fboundp 'ivy-posframe-mode)
+              (ivy-posframe-mode 1))
+            (when (fboundp 'which-key-posframe-mode)
+              (which-key-posframe-mode 1))
             (message "Emacs ready in %.2f seconds with %d garbage collections."
                      (float-time (time-subtract after-init-time before-init-time))
                      gcs-done)))
