@@ -50,18 +50,15 @@
 ** Performance Optimization
 #+BEGIN_SRC emacs-lisp
 ;; Increase garbage collection threshold during startup for better performance
-(setq gc-cons-threshold (* 50 1024 1024)) ; 50MB
-;; Reset to normal threshold after startup
+(setq gc-cons-threshold (* 50 1024 1024))
 (add-hook 'emacs-startup-hook
           (lambda ()
             (setq gc-cons-threshold (* 16 1024 1024)))) ; 16MB
 
-;; Security settings
 (setq enable-local-variables :safe
       enable-local-eval nil
       read-process-output-max (* 1024 1024)) ; 1MB
 
-;; Native compiler settings to reduce warnings
 (setq comp-async-report-warnings-errors 'error-only
       comp-deferred-compilation t
       comp-ctxt-optimization-level 0)
@@ -285,7 +282,7 @@
 (straight-use-package 'neotree)
 
 ;; Neotree configuration
-(setq neo-theme 'nerd      ; Use nerd-icons for beautiful icons
+(setq neo-theme 'nerd
       neo-window-width 35
       neo-smart-open t
       neo-show-hidden-files t
@@ -299,26 +296,20 @@
       neo-confirm-create-directory 'off-p
       neo-window-fixed-size nil)
 
-;; Function to toggle neotree and focus it
 (defun my/neotree-toggle ()
-  "Toggle neotree and focus the window."
   (interactive)
   (neotree-toggle)
   (when neo-global--window
     (select-window neo-global--window)
     (neotree-refresh)))
 
-;; Function to find file in current directory with neotree
 (defun my/neotree-find-file ()
-  "Find file in neotree in current buffer's directory."
   (interactive)
   (neotree-dir default-directory)
   (when neo-global--window
     (select-window neo-global--window)))
 
-;; Custom function to select neotree window properly
 (defun my/neotree-select-window ()
-  "Select neotree window if it exists."
   (interactive)
   (when neo-global--window
     (select-window neo-global--window)))
@@ -382,14 +373,13 @@
 
 (defface origami-fold-header-face
   '((t (:background unspecified :box nil)))
-  "Face used to display fold headers."
+  "Face for origami fold headers."
   :group 'origami)
 
 (require 'origami)
 (add-hook 'prog-mode-hook 'origami-mode)
 
 (defun my/origami-toggle-all ()
-  "Toggle all folds in the current buffer."
   (interactive)
   (if (not (eq last-command 'my/origami-toggle-all))
       (progn
@@ -398,7 +388,6 @@
     (origami-open-all-nodes (current-buffer))))
 
 (defun my/origami-recursively-toggle-node ()
-  "Recursively toggle the node at point."
   (interactive)
   (save-excursion
     (origami-toggle-node (current-buffer) (point) t)))
@@ -430,22 +419,18 @@
       (set-face-attribute 'default nil :font default-font :height 110 :weight 'medium)
       (add-to-list 'default-frame-alist `(font . ,(concat default-font "-11"))))))
 
-;; Variable-pitch font
 (when (and (display-graphic-p) (member "Ubuntu" (font-family-list)))
   (set-face-attribute 'variable-pitch nil :font "Ubuntu" :height 120 :weight 'medium))
 
-;; Terminal font configuration for better icon support
 (when (display-graphic-p)
   (let ((terminal-font (or (car (member "JetBrains Mono" (font-family-list)))
                           (car (member "SF Mono" (font-family-list)))
                           (car (member "Monaco" (font-family-list))))))
     (when terminal-font
-      ;; Set vterm font after vterm is loaded
       (with-eval-after-load 'vterm
         (when (facep 'vterm)
           (set-face-attribute 'vterm nil :font terminal-font :height 110))))))
 
-;; Syntax styling
 (set-face-attribute 'font-lock-comment-face nil :slant 'italic)
 (set-face-attribute 'font-lock-keyword-face nil :slant 'italic)
 (setq-default line-spacing 0.12)
@@ -484,13 +469,12 @@
 (straight-use-package 'ivy-rich)
 (straight-use-package 'swiper)
 (straight-use-package 'all-the-icons-ivy-rich)
-(straight-use-package 'flx)  ; Better fuzzy matching
-(straight-use-package 'prescient)  ; Smart sorting and filtering
+(straight-use-package 'flx)
+(straight-use-package 'prescient)
 
 (setq ivy-use-virtual-buffers t
       ivy-count-format "(%d/%d) "
       enable-recursive-minibuffers t
-      ;; Advanced fuzzy matching
       ivy-re-builders-alist '((t . ivy--regex-fuzzy)
                               (counsel-rg . ivy--regex-plus)
                               (counsel-ag . ivy--regex-plus)
@@ -498,24 +482,19 @@
                               (counsel-grep . ivy--regex-plus)
                               (swiper . ivy--regex-plus)
                               (swiper-isearch . ivy--regex-plus))
-      ;; Better sorting
       ivy-sort-functions-alist '((counsel-find-file . ivy-sort-files-alphabetically)
                                  (counsel-recentf . ivy-sort-files-by-mtime)
                                  (counsel-buffer . ivy-sort-buffer-by-mtime))
-      ;; Case insensitive by default
       ivy-case-fold-search-default t
-      ;; Better regex handling
       ivy-initial-inputs-alist nil)
 
 (ivy-mode 1)
 (counsel-mode 1)
 (ivy-rich-mode 1)
 
-;; Enable advanced fuzzy matching with flx (if available)
 (when (require 'flx nil t)
   (setq ivy-flx-limit 10000))
 
-;; Enable prescient for smart sorting (if available)
 (when (require 'prescient nil t)
   (prescient-persist-mode 1)
   (setq prescient-save-file (expand-file-name "prescient-save.el" user-emacs-directory))
@@ -545,17 +524,14 @@
 (global-set-key (kbd "C-h f") 'counsel-describe-function)
 (global-set-key (kbd "C-h v") 'counsel-describe-variable)
 
-;; Buffer move keys
 (global-set-key (kbd "<C-S-up>")     'buf-move-up)
 (global-set-key (kbd "<C-S-down>")   'buf-move-down)
 (global-set-key (kbd "<C-S-left>")   'buf-move-left)
 (global-set-key (kbd "<C-S-right>")  'buf-move-right)
 
-;; Global vterm-toggle keys
 (global-set-key (kbd "C-c t") 'my/vterm-toggle)
 (global-set-key (kbd "C-c T") 'my/vterm-toggle)
 
-;; Additional vterm navigation keys (only if vterm is available)
 (when (fboundp 'vterm-mode)
   (with-eval-after-load 'vterm
     (when (boundp 'vterm-mode-map)
@@ -577,20 +553,13 @@
 (setq org-link-search-must-match-exact-headline nil
       org-link-search-headline-must-match-exact nil)
 
-;; Configure org-mode for better link handling
 (with-eval-after-load 'org
-  ;; Enable link following with mouse clicks
   (setq org-return-follows-link t)
-  ;; Enable link following with keyboard
   (setq org-tab-follows-link t)
-  ;; Make sure internal links work properly
   (setq org-link-search-must-match-exact-headline nil)
-  
-  ;; Explicitly bind keys for link following
   (define-key org-mode-map (kbd "RET") 'org-open-at-point)
   (define-key org-mode-map (kbd "TAB") 'org-next-link)
   (define-key org-mode-map (kbd "S-TAB") 'org-previous-link)
-  ;; Alternative keybinding for RET if the above doesn't work
   (define-key org-mode-map (kbd "C-c C-o") 'org-open-at-point))
 
 (add-hook 'org-mode-hook
@@ -614,7 +583,7 @@
 #+BEGIN_SRC emacs-lisp
 (straight-use-package 'eglot)
 
-;; Eglot configuration for efficient LSP support
+k; Eglot configuration for efficient LSP support
 (require 'eglot)
 
 ;; Connect to LSP servers for supported languages
@@ -671,11 +640,9 @@
                                 :background (face-attribute 'highlight :background)
                                 :foreground (face-attribute 'highlight :foreground))))
 
-;; Show eglot diagnostics in echo area
 (define-key eglot-mode-map [remap xref-find-definitions] 'eglot-find-declaration)
 (define-key eglot-mode-map [remap xref-find-references] 'eglot-find-references)
 
-;; Auto-format on save
 (setq eglot-autoshutdown t)
 #+END_SRC
 
@@ -971,23 +938,19 @@
 (setq vterm-max-scrollback 10000
       vterm-buffer-name-string "vterm %s"
       vterm-kill-buffer-on-exit t
-      vterm-timer-delay 0.01  ; Fast updates like normal terminal
-      vterm-use-vterm-prompt-detection-method t  ; Enable for proper prompt handling
+      vterm-timer-delay 0.01
+      vterm-use-vterm-prompt-detection-method t
       vterm-module-cmake-args "-DUSE_SYSTEM_LIBVTERM=off"
       ;; Prevent unwanted scrolling
       vterm-scroll-to-bottom-on-input nil
       vterm-scroll-to-bottom-on-output nil
-      ;; Additional terminal-like behavior
       vterm-clear-scrollback t)
 
-;; Configure vterm mode for normal terminal behavior
 (add-hook 'vterm-mode-hook
           (lambda ()
-            ;; Disable auto-scrolling to prevent first row scrolling up
             (setq-local scroll-margin 0)
             (setq-local scroll-conservatively 0)
             (setq-local scroll-preserve-screen-position nil)
-            ;; Keep cursor at bottom naturally
             (setq-local scroll-step 1)))
 
 ;; Optimized vterm function
@@ -998,7 +961,6 @@
       (progn
         (require 'vterm)
         (let ((buf (vterm (generate-new-buffer-name "*vterm*"))))
-          ;; Ensure proper terminal behavior
           (with-current-buffer buf
             (setq-local scroll-margin 0)
             (setq-local scroll-conservatively 0))
@@ -1011,9 +973,7 @@
 #+BEGIN_SRC emacs-lisp
 (straight-use-package 'vterm-toggle)
 
-;; Safe vterm-toggle configuration
 (defun my/vterm-toggle-safe-init ()
-  "Safely initialize vterm-toggle with error handling."
   (condition-case err
       (progn
         (require 'vterm-toggle)
@@ -1024,15 +984,13 @@
     (error (message "Failed to load vterm-toggle: %s" (error-message-string err))
            nil)))
 
-;; Only configure if vterm-toggle loads successfully
 (when (my/vterm-toggle-safe-init)
   (defun my/vterm-toggle ()
-    "Toggle vterm in current project with error handling."
     (interactive)
     (condition-case err
         (vterm-toggle)
       (error (message "Failed to toggle vterm: %s" (error-message-string err))
-             (eshell)))))  ; Fallback to eshell
+             (eshell)))))
 #+END_SRC
 
 * Theme (Doom Themes)
@@ -1041,8 +999,8 @@
 (require 'doom-themes)
 
 ;; Global settings (defaults)
-(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-      doom-themes-enable-italic t) ; if nil, italics is universally disabled
+(setq doom-themes-enable-bold t
+      doom-themes-enable-italic t)
 
 ;; Load the theme (doom-one, doom-vibrant, doom-city-lights, doom-tokyo-night, etc.)
 ;; Ensure theme loads after doom-themes is fully initialized
