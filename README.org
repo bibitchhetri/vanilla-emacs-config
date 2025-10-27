@@ -1,0 +1,30 @@
+* Emacs Configuration
+
+Emacs configuration built with org-mode and straight.el.
+
+** Features
+
+- Vim-style editing with Evil mode
+- Modern UI with Ivy/Counsel completion
+- Language server support (LSP) with Eglot
+- Syntax highlighting via Tree-sitter
+- Integrated terminal (Eshell/Vterm)
+- Git interface with Magit
+- File explorer with Neotree
+- Dashboard with beautiful icons
+
+** Installation
+
+#+BEGIN_SRC shell
+git clone https://github.com/bibitchhetri/vanilla-emacs-config.git ~/.emacs.d
+#+END_SRC
+
+Restart Emacs to automatically install all packages.
+
+** Configuration
+
+The config is organized in ~config.org~ and automatically exported to ~config.el~. Main files:
+
+- ~init.el~ - Entry point
+- ~config.org~ - Main configuration source
+- ~early-init.el~ - Early startup optimization
