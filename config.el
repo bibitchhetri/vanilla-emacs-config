@@ -66,6 +66,19 @@
   :prefix "SPC"
   :global-prefix "M-SPC")
 
+;; Auto-focus functions for window splitting
+(defun my/split-window-below-and-focus (&optional size)
+  "Split window below and focus on new window."
+  (interactive "P")
+  (split-window-below size)
+  (other-window))
+
+(defun my/split-window-right-and-focus (&optional size)
+  "Split window right and focus on new window."
+  (interactive "P")
+  (split-window-right size)
+  (other-window))
+
 (my/leader-keys
  ;; Buffer operations
  "b" '(:ignore t :which-key "buffer commands")
@@ -129,8 +142,8 @@
 
  ;; Window
  "w" '(:ignore t :which-key "window commands")
- "w v" '(split-window-right :which-key "Split vertical")
- "w s" '(split-window-below :which-key "Split horizontal")
+ "w v" '(my/split-window-right-and-focus :which-key "Split vertical")
+ "w s" '(my/split-window-below-and-focus :which-key "Split horizontal")
  "w c" '(delete-window :which-key "Close window")
  "w o" '(delete-other-windows :which-key "Maximize window")
  "w k" '(evil-window-up :which-key "Move up")
@@ -540,6 +553,14 @@
 ;; Eglot configuration for efficient LSP support
 (require 'eglot)
 
+;; Only connect to LSP servers if they're available
+(defun my/eglot-ensure-if-available ()
+  "Start eglot only if server is available."
+  (condition-case err
+      (eglot-ensure)
+    (user-error nil)
+    (error nil)))
+
 ;; Connect to LSP servers for supported languages
 (add-hook 'prog-mode-hook
           (lambda ()
@@ -552,7 +573,7 @@
                       (memq major-mode '(bash-mode sh-mode))
                       (memq major-mode '(ruby-mode ruby-ts-mode))
                       (memq major-mode '(php-mode)))
-              (eglot-ensure))))
+              (my/eglot-ensure-if-available))))
 
 ;; Better LSP settings
 (setq eglot-autoshutdown t
@@ -596,8 +617,6 @@
 
 (define-key eglot-mode-map [remap xref-find-definitions] 'eglot-find-declaration)
 (define-key eglot-mode-map [remap xref-find-references] 'eglot-find-references)
-
-(setq eglot-autoshutdown t)
 
 (straight-use-package 'flycheck)
 (straight-use-package 'diminish)
@@ -820,7 +839,12 @@
       magit-save-repository-buffers 'dontask)
 
 ;; Auto-refresh magit buffers
-(add-hook 'after-save-hook 'magit-after-save-refresh-status)
+(defun my/magit-refresh-status-after-save ()
+  "Refresh magit status after save if in a magit buffer."
+  (when (and (derived-mode-p 'magit-status-mode)
+             (get-buffer-window "*magit*"))
+    (magit-refresh)))
+(add-hook 'after-save-hook 'my/magit-refresh-status-after-save)
 
 (straight-use-package 'sudo-edit)
 (require 'sudo-edit)
@@ -960,10 +984,6 @@
 (set-frame-parameter (selected-frame) 'alpha '(85 . 85))
 
 (windmove-default-keybindings)
-
-;; Auto-focus new windows
-(advice-add 'split-window-below :after #'other-window)
-(advice-add 'split-window-right :after #'other-window)
 
 (straight-use-package 'which-key)
 (require 'which-key)
