@@ -69,13 +69,11 @@
 ;; Auto-focus functions for window splitting
 (defun my/split-window-below-and-focus (&optional size)
   "Split window below and focus on new window."
-  (interactive "P")
   (split-window-below size)
   (other-window))
 
 (defun my/split-window-right-and-focus (&optional size)
   "Split window right and focus on new window."
-  (interactive "P")
   (split-window-right size)
   (other-window))
 
@@ -168,6 +166,44 @@
 
  ;; Quick access
  "SPC" '(counsel-M-x :which-key "M-x"))
+
+(straight-use-package 'undo-tree)
+(require 'undo-tree)
+
+;; Enable undo-tree globally
+(global-undo-tree-mode)
+
+;; Configure undo-tree settings
+(setq undo-tree-visualizer-timestamps t
+      undo-tree-visualizer-diff t
+      undo-tree-auto-save-history t
+      undo-tree-history-directory-alist
+      `(("." . ,(expand-file-name "undo-tree-hist" user-emacs-directory))))
+
+;; Create undo-tree history directory if it doesn't exist
+(unless (file-exists-p (expand-file-name "undo-tree-hist" user-emacs-directory))
+  (make-directory (expand-file-name "undo-tree-hist" user-emacs-directory) t))
+
+;; Integrate undo-tree with Evil mode
+(with-eval-after-load 'evil
+  (setq evil-undo-system 'undo-tree))
+
+;; Keybindings for undo-tree
+(my/leader-keys
+  "u" '(:ignore t :which-key "undo commands")
+  "u u" '(undo-tree-undo :which-key "Undo")
+  "u r" '(undo-tree-redo :which-key "Redo")
+  "u v" '(undo-tree-visualize :which-key "Visualize undo tree")
+  "u s" '(undo-tree-save-history :which-key "Save undo history")
+  "u l" '(undo-tree-load-history :which-key "Load undo history"))
+
+;; Additional keybindings in undo-tree visualizer
+(with-eval-after-load 'undo-tree
+  (define-key undo-tree-visualizer-mode-map (kbd "j") 'undo-tree-visualize-undo)
+  (define-key undo-tree-visualizer-mode-map (kbd "k") 'undo-tree-visualize-redo)
+  (define-key undo-tree-visualizer-mode-map (kbd "l") 'undo-tree-visualize-switch-branch-right)
+  (define-key undo-tree-visualizer-mode-map (kbd "h") 'undo-tree-visualize-switch-branch-left)
+  (define-key undo-tree-visualizer-mode-map (kbd "q") 'undo-tree-visualizer-quit))
 
 (straight-use-package 'all-the-icons)
 (straight-use-package 'all-the-icons-dired)
@@ -839,12 +875,7 @@
       magit-save-repository-buffers 'dontask)
 
 ;; Auto-refresh magit buffers
-(defun my/magit-refresh-status-after-save ()
-  "Refresh magit status after save if in a magit buffer."
-  (when (and (derived-mode-p 'magit-status-mode)
-             (get-buffer-window "*magit*"))
-    (magit-refresh)))
-(add-hook 'after-save-hook 'my/magit-refresh-status-after-save)
+(add-hook 'after-save-hook 'magit-after-save-refresh-status)
 
 (straight-use-package 'sudo-edit)
 (require 'sudo-edit)
