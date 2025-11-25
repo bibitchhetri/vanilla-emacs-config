@@ -1,8 +1,8 @@
-+TITLE: Vanilla Emacs Config
+#+TITLE: Vanilla Emacs Config
 #+AUTHOR: Bibit Kunwar Chhetri
 #+PROPERTY: header-args :tangle yes :results silent :exports code
 #+STARTUP: overview indent hideblocks inlineimages entitiespretty
-+OPTIONS: toc:3 num:nil author:nil
+#+OPTIONS: toc:3 num:nil author:nil
 #+LANGUAGE: en
 #+CATEGORY: emacs-config
 #+FILETAGS: emacs config
