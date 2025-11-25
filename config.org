@@ -2,7 +2,7 @@
 #+AUTHOR: Bibit Kunwar Chhetri
 #+PROPERTY: header-args :tangle yes :results silent :exports code
 #+STARTUP: overview indent hideblocks inlineimages entitiespretty
-j+OPTIONS: toc:3 num:nil author:nil
++OPTIONS: toc:3 num:nil author:nil
 #+LANGUAGE: en
 #+CATEGORY: emacs-config
 #+FILETAGS: emacs config
@@ -718,6 +718,7 @@ j+OPTIONS: toc:3 num:nil author:nil
                       (memq major-mode '(bash-mode sh-mode))
                       (memq major-mode '(ruby-mode ruby-ts-mode))
                       (memq major-mode '(php-mode)))
+                      (memq major-mode '(lua-mode)))
               (my/eglot-ensure-if-available))))
 
 ;; Better LSP settings

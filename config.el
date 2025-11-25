@@ -609,6 +609,7 @@
                       (memq major-mode '(bash-mode sh-mode))
                       (memq major-mode '(ruby-mode ruby-ts-mode))
                       (memq major-mode '(php-mode)))
+                      (memq major-mode '(lua-mode)))
               (my/eglot-ensure-if-available))))
 
 ;; Better LSP settings
